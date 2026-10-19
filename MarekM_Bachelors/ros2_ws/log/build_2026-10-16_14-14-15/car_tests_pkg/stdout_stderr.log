@@ -1,0 +1,20 @@
+running develop
+running egg_info
+creating car_tests_pkg.egg-info
+writing car_tests_pkg.egg-info/PKG-INFO
+writing dependency_links to car_tests_pkg.egg-info/dependency_links.txt
+writing entry points to car_tests_pkg.egg-info/entry_points.txt
+writing requirements to car_tests_pkg.egg-info/requires.txt
+writing top-level names to car_tests_pkg.egg-info/top_level.txt
+writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+reading manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages/car-tests-pkg.egg-link (link to .)
+Installing run_test script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg
+
+Installed /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg
+running symlink_data
+creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index/packages
+symbolically linking /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/resource/car_tests_pkg -> /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index/packages
+symbolically linking /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/package.xml -> /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/car_tests_pkg

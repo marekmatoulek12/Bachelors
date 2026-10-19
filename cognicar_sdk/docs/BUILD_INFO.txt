@@ -1,0 +1,17 @@
+bundle=cognicar_sdk
+generated_at_utc=2026-09-28T14:49:04Z
+host_arch=aarch64
+os_id=ubuntu
+os_version=24.04
+host_os=Ubuntu 24.04.5 LTS
+python_version=3.12.3
+build_mode=ros
+ros_distro=jazzy
+cognicar_rev=b5c2523
+trajectory_tracking_rev=3b10f2f
+low_level_control_rev=6902c84
+localization_rev=1f5b00a
+state_estimator_rev=2651360
+digital_twin_rev=d7a2cb4
+digital_twin_included=false
+customer_pdfs_included=true

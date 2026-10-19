@@ -1,0 +1,2 @@
+[console_scripts]
+run_test = car_tests_pkg.Tests:main

@@ -1,0 +1,17 @@
+[2.710s] Invoking command in '/home/marekm/CVUT/Bakalarka/ros2_ws/build/hello_world_pkg': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/marekm/CVUT/Bakalarka/ros2_ws/build/hello_world_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/marekm/CVUT/Bakalarka/ros2_ws/install/hello_world_pkg/lib/python3.14/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/marekm/CVUT/Bakalarka/ros2_ws/build/hello_world_pkg/build --no-deps symlink_data
+[3.314s] running develop
+[3.651s] running egg_info
+[3.688s] writing hello_world_pkg.egg-info/PKG-INFO
+[3.689s] writing dependency_links to hello_world_pkg.egg-info/dependency_links.txt
+[3.690s] writing entry points to hello_world_pkg.egg-info/entry_points.txt
+[3.690s] writing requirements to hello_world_pkg.egg-info/requires.txt
+[3.691s] writing top-level names to hello_world_pkg.egg-info/top_level.txt
+[3.761s] reading manifest file 'hello_world_pkg.egg-info/SOURCES.txt'
+[3.763s] writing manifest file 'hello_world_pkg.egg-info/SOURCES.txt'
+[3.799s] running build_ext
+[3.799s] Creating /home/marekm/CVUT/Bakalarka/ros2_ws/install/hello_world_pkg/lib/python3.14/site-packages/hello-world-pkg.egg-link (link to .)
+[3.800s] Installing hello_world_executable script to /home/marekm/CVUT/Bakalarka/ros2_ws/install/hello_world_pkg/lib/hello_world_pkg
+[3.801s] 
+[3.801s] Installed /home/marekm/CVUT/Bakalarka/ros2_ws/build/hello_world_pkg
+[3.802s] running symlink_data
+[3.873s] Invoked command in '/home/marekm/CVUT/Bakalarka/ros2_ws/build/hello_world_pkg' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/marekm/CVUT/Bakalarka/ros2_ws/build/hello_world_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/marekm/CVUT/Bakalarka/ros2_ws/install/hello_world_pkg/lib/python3.14/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/marekm/CVUT/Bakalarka/ros2_ws/build/hello_world_pkg/build --no-deps symlink_data

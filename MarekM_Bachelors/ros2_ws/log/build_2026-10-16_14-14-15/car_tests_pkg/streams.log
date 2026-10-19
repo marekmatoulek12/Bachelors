@@ -1,0 +1,22 @@
+[2.708s] Invoking command in '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/build --no-deps symlink_data
+[3.419s] running develop
+[3.878s] running egg_info
+[3.923s] creating car_tests_pkg.egg-info
+[3.923s] writing car_tests_pkg.egg-info/PKG-INFO
+[3.924s] writing dependency_links to car_tests_pkg.egg-info/dependency_links.txt
+[3.925s] writing entry points to car_tests_pkg.egg-info/entry_points.txt
+[3.925s] writing requirements to car_tests_pkg.egg-info/requires.txt
+[3.925s] writing top-level names to car_tests_pkg.egg-info/top_level.txt
+[3.926s] writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+[4.019s] reading manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+[4.021s] writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+[4.154s] running build_ext
+[4.156s] Creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages/car-tests-pkg.egg-link (link to .)
+[4.158s] Installing run_test script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg
+[4.159s] 
+[4.159s] Installed /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg
+[4.159s] running symlink_data
+[4.159s] creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index/packages
+[4.160s] symbolically linking /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/resource/car_tests_pkg -> /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index/packages
+[4.160s] symbolically linking /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/package.xml -> /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/car_tests_pkg
+[4.271s] Invoked command in '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/build --no-deps symlink_data

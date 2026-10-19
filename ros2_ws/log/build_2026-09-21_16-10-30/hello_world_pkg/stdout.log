@@ -1,0 +1,15 @@
+running develop
+running egg_info
+writing hello_world_pkg.egg-info/PKG-INFO
+writing dependency_links to hello_world_pkg.egg-info/dependency_links.txt
+writing entry points to hello_world_pkg.egg-info/entry_points.txt
+writing requirements to hello_world_pkg.egg-info/requires.txt
+writing top-level names to hello_world_pkg.egg-info/top_level.txt
+reading manifest file 'hello_world_pkg.egg-info/SOURCES.txt'
+writing manifest file 'hello_world_pkg.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/marekm/CVUT/Bakalarka/ros2_ws/install/hello_world_pkg/lib/python3.14/site-packages/hello-world-pkg.egg-link (link to .)
+Installing hello_world_executable script to /home/marekm/CVUT/Bakalarka/ros2_ws/install/hello_world_pkg/lib/hello_world_pkg
+
+Installed /home/marekm/CVUT/Bakalarka/ros2_ws/build/hello_world_pkg
+running symlink_data

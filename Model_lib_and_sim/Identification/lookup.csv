@@ -1,0 +1,5 @@
+cmd_angle, sim_division_koeff, yaw_rate
+5, 2.1, 0.14
+10, 1.8, 0.33
+15, 1.6, 0.52
+20, 1.55, 0.72

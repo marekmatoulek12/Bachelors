@@ -1,0 +1,20 @@
+[1.137s] Invoking command in '/home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/marekm/CVUT/Bakalarka/ros2_ws/install/car_tests_pkg/lib/python3.14/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg/build --no-deps symlink_data
+[1.346s] running develop
+[1.456s] running egg_info
+[1.467s] creating car_tests_pkg.egg-info
+[1.467s] writing car_tests_pkg.egg-info/PKG-INFO
+[1.469s] writing dependency_links to car_tests_pkg.egg-info/dependency_links.txt
+[1.469s] writing requirements to car_tests_pkg.egg-info/requires.txt
+[1.469s] writing top-level names to car_tests_pkg.egg-info/top_level.txt
+[1.469s] writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+[1.492s] reading manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+[1.492s] writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+[1.504s] running build_ext
+[1.504s] Creating /home/marekm/CVUT/Bakalarka/ros2_ws/install/car_tests_pkg/lib/python3.14/site-packages/car-tests-pkg.egg-link (link to .)
+[1.505s] 
+[1.506s] Installed /home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg
+[1.506s] running symlink_data
+[1.506s] creating /home/marekm/CVUT/Bakalarka/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index/packages
+[1.507s] symbolically linking /home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg/resource/car_tests_pkg -> /home/marekm/CVUT/Bakalarka/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index/packages
+[1.507s] symbolically linking /home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg/package.xml -> /home/marekm/CVUT/Bakalarka/ros2_ws/install/car_tests_pkg/share/car_tests_pkg
+[1.550s] Invoked command in '/home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/marekm/CVUT/Bakalarka/ros2_ws/install/car_tests_pkg/lib/python3.14/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/marekm/CVUT/Bakalarka/ros2_ws/build/car_tests_pkg/build --no-deps symlink_data

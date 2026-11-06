@@ -110,6 +110,48 @@ def optimize_steering_angle(target_yaw_rate, velocity):
     else:
         return np.nan
 
+def calibrate_log(file_path, A, B):
+    STEERING_CMD_COL = "cmd_steer_rad"
+    """
+    Načte zadaný .csv soubor, přidá sloupec real_cmd_steer obsahující data
+    převedená lineární funkcí Ax + B a uloží jej jako calibrated_{original_name}.csv
+    do složky Model_lib_and_sim/Identification.
+    """
+    if not os.path.exists(file_path):
+        print(f"Chyba: Soubor {file_path} neexistuje.")
+        return
+
+    df = pd.read_csv(file_path)
+    
+    # Detekce sloupce s povelem řízení
+    cmd_col = None
+    for col in df.columns:
+        if col.lower() in [STEERING_CMD_COL.lower(), 'cmd_steer', 'steering', 'steer', 'delta', 'df']:
+            cmd_col = col
+            break
+            
+    if not cmd_col:
+        candidates = [c for c in df.columns if 'steer' in c.lower() or 'deg' in c.lower() or 'df' in c.lower()]
+        if candidates:
+            cmd_col = candidates[0]
+        else:
+            print(f"Chyba: V souboru {file_path} nebyl nalezen sloupec pro povel řízení.")
+            return
+
+    # Přepočet lineární funkcí Ax + B a uložení do nového sloupce
+    df['real_steer_rad'] = df[cmd_col] * A + B * np.pi/180 # predpoklad, ze puvodni odvozeni je ze stupnu, tedy je nutne prepocitat na radiany
+
+    # Výstupní složka Model_lib_and_sim/Identification/Calibrated
+    target_dir = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'Calibrated')
+    os.makedirs(target_dir, exist_ok=True)
+
+    original_name = os.path.basename(file_path)
+    output_filename = f"calibrated_{original_name}"
+    output_path = os.path.join(target_dir, output_filename)
+
+    df.to_csv(output_path, index=False)
+    print(f"Kalibrovaný soubor uložen do: {output_path}")
+
 def main():
     search_pattern = os.path.join(repo_root, '**', 'rst_*_log_*.csv')
     log_files = glob.glob(search_pattern, recursive=True)
@@ -193,4 +235,6 @@ def main():
     print(f"Graf uložen do: {plot_path}")
 
 if __name__ == '__main__':
-    main()
+    # main()..
+    file_path = os.path.join(repo_root, 'log_files', '18.10.2026', 'rst_20_log_1792330050.csv')
+    calibrate_log(file_path, 0.7448, -1.5184)

@@ -33,7 +33,15 @@ class BaseIdentification:
             
         self.timestamp = data["timestamp"].to_numpy()
         self.cmd_rpm = data["cmd_rpm"].to_numpy()
-        self.cmd_steer_rad = data["cmd_steer_rad"].to_numpy() # cmd_steer_rad
+
+        if "real_steer_rad" in data.columns:
+            steer_column = "real_steer_rad"
+        else:
+            steer_column = "cmd_steer_rad"
+
+        # steer_column = "cmd_steer_rad" # for comparison purposes
+        self.cmd_steer_rad = data[steer_column].to_numpy()
+
         self.gps_x = data["gps_x"].to_numpy()
         self.gps_y = data["gps_y"].to_numpy()
         self.gps_yaw = data["gps_yaw"].to_numpy()
@@ -171,11 +179,7 @@ class BaseIdentification:
 
     @staticmethod
     def rpm2rad_s(rpm: float | np.ndarray) -> float | np.ndarray:
-        return rpm * (2.0 * np.pi / 60.0)
-
-    @staticmethod
-    def cmd2real_steer(cmd: float) -> float:
-        pass    
+        return rpm * (2.0 * np.pi / 60.0) 
 
 class SingleTrackIdentification(BaseIdentification):
     """Původní bicyklový model (Single-Track) - zjednodušený přístup."""

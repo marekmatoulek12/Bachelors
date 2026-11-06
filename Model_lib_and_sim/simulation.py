@@ -630,10 +630,10 @@ if __name__ == "__main__":
             reference_df.append(deg2rad(0))
         elif _ < acc_time + steering_time:
             reference_vx.append(1)
-            reference_df.append(deg2rad((20/1.55) * (_ - acc_time)/steering_time))
+            reference_df.append(deg2rad((20) * (_ - acc_time)/steering_time))
         else:
             reference_vx.append( 1 + 0 * (_ - acc_time - steering_time) * sim_step)
-            reference_df.append(deg2rad((20/1.55)))
+            reference_df.append(deg2rad((20)))
 
     sim = Simulation(
         reference_vx=reference_vx,

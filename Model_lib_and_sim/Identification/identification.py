@@ -153,11 +153,6 @@ class BaseIdentification:
         rpm_ax.legend()
         fig_rpm.tight_layout()
 
-
-    @staticmethod
-    def rpm2rad_s(rpm: float | np.ndarray) -> float | np.ndarray:
-        return rpm * (2.0 * np.pi / 60.0)
-
     def steer_yaw_csv(self, output_path: str = "steer_yaw_analysis.csv"):
         # Složení sloupců za sebe do slovníku
         data_dict = {
@@ -166,13 +161,21 @@ class BaseIdentification:
             "yaw_rate": self.yaw_rate,
             "yaw_rate_filtered": self.yaw_rate_filtered,
         }
-        
+
         # Vytvoření Pandas DataFrame
         df_to_save = pd.DataFrame(data_dict)
-        
+
         # Uložení do CSV formátu (bez indexu řádků)
         df_to_save.to_csv(output_path, index=False)
         print(f"Data byla úspěšně uložena do: {output_path}")
+
+    @staticmethod
+    def rpm2rad_s(rpm: float | np.ndarray) -> float | np.ndarray:
+        return rpm * (2.0 * np.pi / 60.0)
+
+    @staticmethod
+    def cmd2real_steer(cmd: float) -> float:
+        pass    
 
 class SingleTrackIdentification(BaseIdentification):
     """Původní bicyklový model (Single-Track) - zjednodušený přístup."""
@@ -547,15 +550,15 @@ def main():
     print("--- Zpracování dat modelem Single-Track ---")
     st_handler = SingleTrackIdentification(data, start_from=1.0)
     st_handler.prepare_data()
-    st_handler.steer_yaw_csv(args.out_file)
-    # st_handler.plot_prepared_data(title_prefix="Single-Track") # Společné pro oba, stačí vykreslit jednou
-    # st_handler.slip_variables_calculation()
-    # st_handler.wheel_forces_calculation()
+    # st_handler.steer_yaw_csv(args.out_file)
+    st_handler.plot_prepared_data(title_prefix="Single-Track") # Společné pro oba, stačí vykreslit jednou
+    st_handler.slip_variables_calculation()
+    st_handler.wheel_forces_calculation()
     
-    # st_handler.plot_slip_variables()
+    st_handler.plot_slip_variables()
     # st_handler.plot_wheel_forces()
-    # st_handler.plot_tire_models()
-    # st_handler.plot_combined_slip_forces()
+    st_handler.plot_tire_models()
+    #st_handler.plot_combined_slip_forces()
     
     # # ---------------------------------------------------------
     # # 2. Zpracování podle Dual-Track Modelu

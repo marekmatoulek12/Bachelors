@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'run_test = car_tests_pkg.Tests:main',
+            'keyboard_controller = car_tests_pkg.Keyboard_Controller:main',
         ],
     },
 )

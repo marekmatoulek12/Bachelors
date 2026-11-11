@@ -1,2 +1,0 @@
-[console_scripts]
-hello_world_executable = hello_world_pkg.hello_world:main

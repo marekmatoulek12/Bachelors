@@ -1,0 +1,49 @@
+[0.562s] Invoking command in '/home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTEST_ADDOPTS=--tb=short --junit-xml=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/pytest.xml --junit-prefix=car_tests_pkg -o cache_dir=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/.pytest_cache PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m pytest
+[2.614s] ============================= test session starts ==============================
+[2.615s] platform linux -- Python 3.12.3, pytest-7.4.4, pluggy-1.4.0
+[2.615s] cachedir: /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/.pytest_cache
+[2.615s] rootdir: /home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg
+[2.615s] plugins: launch-testing-ros-0.26.12, ament-pep257-0.17.5, launch-testing-3.4.11, ament-xmllint-0.17.5, ament-lint-0.17.5, ament-flake8-0.17.5, ament-copyright-0.17.5, cov-4.1.0, colcon-core-0.21.0
+[2.616s] collected 0 items / 1 error
+[2.616s] 
+[2.616s] ==================================== ERRORS ====================================
+[2.616s] ________________________ ERROR collecting test session _________________________
+[2.616s] /usr/lib/python3/dist-packages/pluggy/_hooks.py:501: in __call__
+[2.616s]     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+[2.617s] /usr/lib/python3/dist-packages/pluggy/_manager.py:119: in _hookexec
+[2.617s]     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+[2.617s] /usr/lib/python3/dist-packages/_pytest/python.py:215: in pytest_collect_file
+[2.617s]     module: Module = ihook.pytest_pycollect_makemodule(
+[2.617s] /usr/lib/python3/dist-packages/_pytest/config/compat.py:66: in fixed_hook
+[2.617s]     return hook(**kw)
+[2.618s] /usr/lib/python3/dist-packages/pluggy/_hooks.py:501: in __call__
+[2.619s]     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+[2.619s] /usr/lib/python3/dist-packages/pluggy/_manager.py:119: in _hookexec
+[2.619s]     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+[2.619s] /opt/ros/jazzy/lib/python3.12/site-packages/launch_testing/pytest/hooks.py:193: in pytest_pycollect_makemodule
+[2.620s]     entrypoint = find_launch_test_entrypoint(path)
+[2.620s] /opt/ros/jazzy/lib/python3.12/site-packages/launch_testing/pytest/hooks.py:183: in find_launch_test_entrypoint
+[2.620s]     module = import_path(path, root=None)
+[2.620s] /usr/lib/python3/dist-packages/_pytest/pathlib.py:567: in import_path
+[2.620s]     importlib.import_module(module_name)
+[2.620s] /usr/lib/python3.12/importlib/__init__.py:90: in import_module
+[2.621s]     return _bootstrap._gcd_import(name[level:], package, level)
+[2.621s] <frozen importlib._bootstrap>:1387: in _gcd_import
+[2.621s]     ???
+[2.621s] <frozen importlib._bootstrap>:1360: in _find_and_load
+[2.621s]     ???
+[2.621s] <frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+[2.621s]     ???
+[2.622s] <frozen importlib._bootstrap>:935: in _load_unlocked
+[2.622s]     ???
+[2.622s] /usr/lib/python3/dist-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2.622s]     exec(co, module.__dict__)
+[2.622s] test/test_mypy.py:15: in <module>
+[2.622s]     from ament_mypy.main import main
+[2.623s] E   ModuleNotFoundError: No module named 'ament_mypy'
+[2.623s] - generated xml file: /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/pytest.xml -
+[2.624s] =========================== short test summary info ============================
+[2.624s] ERROR  - ModuleNotFoundError: No module named 'ament_mypy'
+[2.624s] !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+[2.625s] =============================== 1 error in 1.24s ===============================
+[2.845s] Invoked command in '/home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg' returned '2': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTEST_ADDOPTS=--tb=short --junit-xml=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/pytest.xml --junit-prefix=car_tests_pkg -o cache_dir=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/.pytest_cache PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m pytest

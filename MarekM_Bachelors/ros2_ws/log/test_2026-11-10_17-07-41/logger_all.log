@@ -1,0 +1,85 @@
+[0.451s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'test', '--packages-select', 'car_tests_pkg', '--event-handlers', 'console_direct+']
+[0.451s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='test', build_base='build', install_base='install', merge_install=False, test_result_base=None, retest_until_fail=0, retest_until_pass=0, abort_on_error=False, return_code_on_test_failure=False, executor='parallel', parallel_workers=6, event_handlers=['console_direct+'], ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=['car_tests_pkg'], packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], ctest_args=None, python_testing=None, pytest_args=None, pytest_with_coverage=False, unittest_args=None, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0xffff7e2baf60>, verb_extension=<colcon_core.verb.test.TestVerb object at 0xffff7e2b9ee0>, main=<bound method TestVerb.main of <colcon_core.verb.test.TestVerb object at 0xffff7e2b9ee0>>, mixin_verb=('test',))
+[0.546s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.546s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.546s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.546s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.546s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.547s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.547s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/cogni/MarekM_Bachelors/ros2_ws'
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.604s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.604s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.604s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.605s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.605s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.605s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.605s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.605s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.606s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.606s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.606s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.606s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.607s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.607s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.607s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.607s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.607s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.607s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.607s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.608s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.609s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extensions ['ignore', 'ignore_ament_install']
+[0.609s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extension 'ignore'
+[0.609s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extension 'ignore_ament_install'
+[0.609s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extensions ['colcon_pkg']
+[0.609s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extension 'colcon_pkg'
+[0.609s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extensions ['colcon_meta']
+[0.609s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extension 'colcon_meta'
+[0.610s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extensions ['ros']
+[0.610s] Level 1:colcon.colcon_core.package_identification:_identify(src/car_tests_pkg) by extension 'ros'
+[0.616s] DEBUG:colcon.colcon_core.package_identification:Package 'src/car_tests_pkg' with type 'ros.ament_python' and name 'car_tests_pkg'
+[0.616s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.616s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.617s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.617s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.617s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.622s] Level 5:colcon.colcon_core.verb:set package 'car_tests_pkg' test argument 'ctest_args' from command line to 'None'
+[0.622s] Level 5:colcon.colcon_core.verb:set package 'car_tests_pkg' test argument 'python_testing' from command line to 'None'
+[0.622s] Level 5:colcon.colcon_core.verb:set package 'car_tests_pkg' test argument 'pytest_args' from command line to 'None'
+[0.622s] Level 5:colcon.colcon_core.verb:set package 'car_tests_pkg' test argument 'pytest_with_coverage' from command line to 'False'
+[0.622s] Level 5:colcon.colcon_core.verb:set package 'car_tests_pkg' test argument 'unittest_args' from command line to 'None'
+[0.622s] Level 5:colcon.colcon_core.verb:set package 'car_tests_pkg' test argument 'retest_until_pass' from command line to '0'
+[0.622s] Level 5:colcon.colcon_core.verb:set package 'car_tests_pkg' test argument 'retest_until_fail' from command line to '0'
+[0.622s] DEBUG:colcon.colcon_core.verb.test:Testing package 'car_tests_pkg' with the following arguments: {'build_base': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg', 'ctest_args': None, 'install_base': '/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg', 'path': '/home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg', 'pytest_args': None, 'pytest_with_coverage': False, 'python_testing': None, 'retest_until_fail': 0, 'retest_until_pass': 0, 'test_result_base': None, 'unittest_args': None}
+[0.623s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.625s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.625s] INFO:colcon.colcon_ros.task.ament_python.test:Testing ROS package in '/home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg' with build type'ament_python'
+[0.626s] INFO:colcon.colcon_core.task.python.test:Testing Python package in '/home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg'
+[0.631s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.631s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.631s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.182s] Level 1:colcon.colcon_core.task.python.test:test() by extension 'pytest'
+[1.183s] Level 1:colcon.colcon_core.task.python.test:test.step() by extension 'pytest'
+[1.188s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTEST_ADDOPTS=--tb=short --junit-xml=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/pytest.xml --junit-prefix=car_tests_pkg -o cache_dir=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/.pytest_cache PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m pytest
+[3.471s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg' returned '2': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTEST_ADDOPTS=--tb=short --junit-xml=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/pytest.xml --junit-prefix=car_tests_pkg -o cache_dir=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/.pytest_cache PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m pytest
+[3.481s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[3.481s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[3.481s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '2'
+[3.481s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[3.482s] DEBUG:colcon.colcon_core.event_reactor:joined thread

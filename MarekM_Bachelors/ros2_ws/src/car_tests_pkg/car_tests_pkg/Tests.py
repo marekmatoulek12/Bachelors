@@ -274,7 +274,7 @@ class RampSpeedTest(LoggingConnectionBP):
             self.log_commands(rpm_req, steering_angle_req)
 
             # Publikovani pozadavku
-            self.publish_data(rpm_req, steering_angle_req)
+            self.publish_data()
             
             # Logovani do CSV
             self.log_data()
@@ -401,12 +401,19 @@ def main(args=None):
     - casem se to auto urve 
     """
     start_speed_m_s = 1.0 
-    target_steer_deg = 20.0
-    acceleration_m_ss = 0.3  
+    target_steer_deg = 0.0
+    acceleration_m_ss = 0.0  
     test_length = 20.0  # seconds
     timer_period = 0.01  # 100 Hz
+
+    def sgn_str(x:int):
+        if x >= 0:
+            return ""
+        else:
+            return "_"
+    
     node = RampSpeedTest(
-        node_name=f"rst_{int(target_steer_deg)}_{int(acceleration_m_ss)}",
+        node_name=f"rst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(acceleration_m_ss)}",
         start_speed_m_s=start_speed_m_s,
         target_steer_deg=target_steer_deg,
         acceleration_m_ss=acceleration_m_ss,

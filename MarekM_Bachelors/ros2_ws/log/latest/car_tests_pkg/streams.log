@@ -1,17 +1,18 @@
-[2.846s] Invoking command in '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/build --no-deps symlink_data
-[3.606s] running develop
-[4.098s] running egg_info
-[4.145s] writing car_tests_pkg.egg-info/PKG-INFO
-[4.147s] writing dependency_links to car_tests_pkg.egg-info/dependency_links.txt
-[4.147s] writing entry points to car_tests_pkg.egg-info/entry_points.txt
-[4.147s] writing requirements to car_tests_pkg.egg-info/requires.txt
-[4.148s] writing top-level names to car_tests_pkg.egg-info/top_level.txt
-[4.246s] reading manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
-[4.248s] writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
-[4.387s] running build_ext
-[4.390s] Creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages/car-tests-pkg.egg-link (link to .)
-[4.392s] Installing run_test script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg
-[4.393s] 
-[4.393s] Installed /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg
-[4.393s] running symlink_data
-[4.508s] Invoked command in '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/build --no-deps symlink_data
+[3.026s] Invoking command in '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/build --no-deps symlink_data
+[3.832s] running develop
+[4.361s] running egg_info
+[4.411s] writing car_tests_pkg.egg-info/PKG-INFO
+[4.412s] writing dependency_links to car_tests_pkg.egg-info/dependency_links.txt
+[4.412s] writing entry points to car_tests_pkg.egg-info/entry_points.txt
+[4.413s] writing requirements to car_tests_pkg.egg-info/requires.txt
+[4.413s] writing top-level names to car_tests_pkg.egg-info/top_level.txt
+[4.519s] reading manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+[4.521s] writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
+[4.672s] running build_ext
+[4.672s] Creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages/car-tests-pkg.egg-link (link to .)
+[4.673s] Installing keyboard_controller script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg
+[4.674s] Installing run_test script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg
+[4.674s] 
+[4.675s] Installed /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg
+[4.675s] running symlink_data
+[4.795s] Invoked command in '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/build --no-deps symlink_data

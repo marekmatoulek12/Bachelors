@@ -9,6 +9,7 @@ reading manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
 writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'
 running build_ext
 Creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages/car-tests-pkg.egg-link (link to .)
+Installing keyboard_controller script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg
 Installing run_test script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg
 
 Installed /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg

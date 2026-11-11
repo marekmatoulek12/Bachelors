@@ -1,0 +1,71 @@
+[0.000000] (-) TimerEvent: {}
+[0.000238] (car_tests_pkg) JobQueued: {'identifier': 'car_tests_pkg', 'dependencies': OrderedDict()}
+[0.000954] (car_tests_pkg) JobStarted: {'identifier': 'car_tests_pkg'}
+[0.099403] (-) TimerEvent: {}
+[0.199690] (-) TimerEvent: {}
+[0.300031] (-) TimerEvent: {}
+[0.400344] (-) TimerEvent: {}
+[0.500690] (-) TimerEvent: {}
+[0.601029] (-) TimerEvent: {}
+[0.701354] (-) TimerEvent: {}
+[0.801717] (-) TimerEvent: {}
+[0.902043] (-) TimerEvent: {}
+[1.002371] (-) TimerEvent: {}
+[1.102781] (-) TimerEvent: {}
+[1.203084] (-) TimerEvent: {}
+[1.303440] (-) TimerEvent: {}
+[1.403759] (-) TimerEvent: {}
+[1.504198] (-) TimerEvent: {}
+[1.604510] (-) TimerEvent: {}
+[1.704823] (-) TimerEvent: {}
+[1.805159] (-) TimerEvent: {}
+[1.905479] (-) TimerEvent: {}
+[2.005801] (-) TimerEvent: {}
+[2.106183] (-) TimerEvent: {}
+[2.206528] (-) TimerEvent: {}
+[2.306849] (-) TimerEvent: {}
+[2.407165] (-) TimerEvent: {}
+[2.507477] (-) TimerEvent: {}
+[2.607787] (-) TimerEvent: {}
+[2.708128] (-) TimerEvent: {}
+[2.808439] (-) TimerEvent: {}
+[2.908759] (-) TimerEvent: {}
+[3.009150] (-) TimerEvent: {}
+[3.024328] (car_tests_pkg) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/build', '--no-deps', 'symlink_data'], 'cwd': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'AUTO_LOCAL_ROUTING': 'false', 'RUBBER_DUCK_AGENT': 'true', 'COPILOT_EXP_COPILOT_CLI_EXECUTION_SUBAGENT': 'false', 'AI_AGENT': 'github_copilot_vscode_agent', 'USER': 'cogni', 'SSH_CLIENT': '10.0.0.154 58612 22', 'XDG_SESSION_TYPE': 'tty', 'GIT_ASKPASS': '', 'SHLVL': '2', 'LD_LIBRARY_PATH': '/home/cogni/cognicar_sdk/lib:/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/aarch64-linux-gnu:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib64:/usr/local/cuda-13.2/lib64:', 'HOME': '/home/cogni', 'GIT_CONFIG_COUNT': '3', 'OLDPWD': '/home/cogni', 'COPILOT_CLI_RUN_AS_NODE': '1', 'ROS_PYTHON_VERSION': '3', 'COPILOT_CLI': '1', 'SSH_ASKPASS': '', 'ANTHROPIC_ADVISOR': 'false', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/2002/bus', 'COPILOT_HOME': '/home/cogni/.copilot', 'DEBUGINFOD_URLS': 'https://debuginfod.ubuntu.com', 'GIT_OPTIONAL_LOCKS': '0', 'GCM_INTERACTIVE': 'Never', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'cogni', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'SKILL_CHAR_BUDGET': '30000', 'XDG_SESSION_CLASS': 'user', 'XDG_SESSION_ID': '5', 'WINML_LOCAL_MODELS': 'false', 'GIT_CONFIG_VALUE_0': 'explicit', 'PATH': '/home/cogni/.local/bin:/opt/ros/jazzy/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/src/tensorrt/bin:/usr/local/cuda-13.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/cogni/.vscode-server/cli/servers/Stable-c4453f8ea430795f941c1b2ff6c9321135a74a02/server/node_modules/@vscode/ripgrep-universal/bin/linux-arm64:/home/cogni/.vscode-server/cli/servers/Stable-c4453f8ea430795f941c1b2ff6c9321135a74a02/server/node_modules/@github/copilot-sdk-linux-arm64/ripgrep/bin/linux-arm64', 'GIT_CONFIG_VALUE_1': 'never', 'CLAUDE_CODE_DISABLE_PRECOMPACT_SKIP': '1', 'GIT_CONFIG_VALUE_2': 'false', 'XDG_RUNTIME_DIR': '/run/user/2002', 'LANG': 'en_US.UTF-8', 'LS_COLORS': '', 'ROS_DOMAIN_ID': '0', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'COPILOT_AGENT_SESSION_ID': '9c446edc-9529-41cf-9552-d6e9f837f753', 'SHELL': '/bin/bash', 'COPILOT_RUNTIME_PROCESS_FILE_LOGGING': '1', 'GIT_TERMINAL_PROMPT': '0', 'GIT_CONFIG_KEY_0': 'safe.bareRepository', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GIT_CONFIG_KEY_1': 'credential.interactive', 'GIT_CONFIG_KEY_2': 'core.fsmonitor', 'COPILOT_MCP_APPS': 'true', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg', 'AUTO_APPROVAL': 'true', 'LC_ALL': 'en_US.UTF-8', 'SSH_CONNECTION': '10.0.0.154 58612 10.0.0.180 22', 'XDG_DATA_DIRS': '/usr/share/gnome:/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'COPILOT_ENABLE_BUILTIN_GITHUB_MCP': 'true', 'PYTHONPATH': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:/home/cogni/cognicar_sdk/python:/home/cogni/cognicar_sdk/exercises/1_path_tracking:/home/cogni/cognicar_sdk/exercises/3_low_level_control:/opt/ros/jazzy/lib/python3.12/site-packages', 'COPILOT_EXP_COPILOT_CLI_EXECUTION_SUBAGENT_MODEL': 'gpt-5.6-luna', 'COLCON': '1', 'COPILOT_CLI_ENABLED_FEATURE_FLAGS': 'SHELL_SPAWN_BACKEND,DYNAMIC_AUTO_TIERS', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor'}, 'shell': False}
+[3.109288] (-) TimerEvent: {}
+[3.209604] (-) TimerEvent: {}
+[3.309923] (-) TimerEvent: {}
+[3.410218] (-) TimerEvent: {}
+[3.510536] (-) TimerEvent: {}
+[3.610860] (-) TimerEvent: {}
+[3.711178] (-) TimerEvent: {}
+[3.811511] (-) TimerEvent: {}
+[3.832826] (car_tests_pkg) StdoutLine: {'line': b'running develop\n'}
+[3.911655] (-) TimerEvent: {}
+[4.012009] (-) TimerEvent: {}
+[4.112349] (-) TimerEvent: {}
+[4.212683] (-) TimerEvent: {}
+[4.313014] (-) TimerEvent: {}
+[4.361821] (car_tests_pkg) StdoutLine: {'line': b'running egg_info\n'}
+[4.412222] (car_tests_pkg) StdoutLine: {'line': b'writing car_tests_pkg.egg-info/PKG-INFO\n'}
+[4.412863] (car_tests_pkg) StdoutLine: {'line': b'writing dependency_links to car_tests_pkg.egg-info/dependency_links.txt\n'}
+[4.413081] (-) TimerEvent: {}
+[4.413567] (car_tests_pkg) StdoutLine: {'line': b'writing entry points to car_tests_pkg.egg-info/entry_points.txt\n'}
+[4.413932] (car_tests_pkg) StdoutLine: {'line': b'writing requirements to car_tests_pkg.egg-info/requires.txt\n'}
+[4.414254] (car_tests_pkg) StdoutLine: {'line': b'writing top-level names to car_tests_pkg.egg-info/top_level.txt\n'}
+[4.513237] (-) TimerEvent: {}
+[4.520058] (car_tests_pkg) StdoutLine: {'line': b"reading manifest file 'car_tests_pkg.egg-info/SOURCES.txt'\n"}
+[4.521844] (car_tests_pkg) StdoutLine: {'line': b"writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'\n"}
+[4.615994] (-) TimerEvent: {}
+[4.672653] (car_tests_pkg) StdoutLine: {'line': b'running build_ext\n'}
+[4.673498] (car_tests_pkg) StdoutLine: {'line': b'Creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages/car-tests-pkg.egg-link (link to .)\n'}
+[4.674471] (car_tests_pkg) StdoutLine: {'line': b'Installing keyboard_controller script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg\n'}
+[4.674988] (car_tests_pkg) StdoutLine: {'line': b'Installing run_test script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg\n'}
+[4.675572] (car_tests_pkg) StdoutLine: {'line': b'\n'}
+[4.676081] (car_tests_pkg) StdoutLine: {'line': b'Installed /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg\n'}
+[4.676641] (car_tests_pkg) StdoutLine: {'line': b'running symlink_data\n'}
+[4.716136] (-) TimerEvent: {}
+[4.795619] (car_tests_pkg) CommandEnded: {'returncode': 0}
+[4.816793] (-) TimerEvent: {}
+[4.824130] (car_tests_pkg) JobEnded: {'identifier': 'car_tests_pkg', 'rc': 0}
+[4.825553] (-) EventReactorShutdown: {}

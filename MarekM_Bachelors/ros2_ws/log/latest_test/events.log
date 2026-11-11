@@ -1,0 +1,82 @@
+[0.000000] (-) TimerEvent: {}
+[0.000486] (car_tests_pkg) JobQueued: {'identifier': 'car_tests_pkg', 'dependencies': OrderedDict({'car_tests_pkg': '/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg'})}
+[0.001072] (car_tests_pkg) JobStarted: {'identifier': 'car_tests_pkg'}
+[0.099461] (-) TimerEvent: {}
+[0.199812] (-) TimerEvent: {}
+[0.300127] (-) TimerEvent: {}
+[0.400448] (-) TimerEvent: {}
+[0.500827] (-) TimerEvent: {}
+[0.559567] (car_tests_pkg) Command: {'cmd': ['/usr/bin/python3', '-m', 'pytest'], 'cwd': '/home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'AUTO_LOCAL_ROUTING': 'false', 'RUBBER_DUCK_AGENT': 'true', 'COPILOT_EXP_COPILOT_CLI_EXECUTION_SUBAGENT': 'false', 'AI_AGENT': 'github_copilot_vscode_agent', 'USER': 'cogni', 'SSH_CLIENT': '10.0.0.154 58612 22', 'XDG_SESSION_TYPE': 'tty', 'GIT_ASKPASS': '', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/home/cogni/cognicar_sdk/lib:/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/aarch64-linux-gnu:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib64:/usr/local/cuda-13.2/lib64:', 'HOME': '/home/cogni', 'GIT_CONFIG_COUNT': '3', 'OLDPWD': '/home/cogni', 'COPILOT_CLI_RUN_AS_NODE': '1', 'ROS_PYTHON_VERSION': '3', 'COPILOT_CLI': '1', 'SSH_ASKPASS': '', 'ANTHROPIC_ADVISOR': 'false', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/2002/bus', 'COPILOT_HOME': '/home/cogni/.copilot', 'DEBUGINFOD_URLS': 'https://debuginfod.ubuntu.com', 'GIT_OPTIONAL_LOCKS': '0', 'COLCON_PREFIX_PATH': '/home/cogni/MarekM_Bachelors/ros2_ws/install', 'GCM_INTERACTIVE': 'Never', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'cogni', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'SKILL_CHAR_BUDGET': '30000', 'XDG_SESSION_CLASS': 'user', 'XDG_SESSION_ID': '5', 'WINML_LOCAL_MODELS': 'false', 'GIT_CONFIG_VALUE_0': 'explicit', 'PATH': '/home/cogni/.local/bin:/opt/ros/jazzy/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/src/tensorrt/bin:/usr/local/cuda-13.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/cogni/.vscode-server/cli/servers/Stable-c4453f8ea430795f941c1b2ff6c9321135a74a02/server/node_modules/@vscode/ripgrep-universal/bin/linux-arm64:/home/cogni/.vscode-server/cli/servers/Stable-c4453f8ea430795f941c1b2ff6c9321135a74a02/server/node_modules/@github/copilot-sdk-linux-arm64/ripgrep/bin/linux-arm64', 'GIT_CONFIG_VALUE_1': 'never', 'CLAUDE_CODE_DISABLE_PRECOMPACT_SKIP': '1', 'GIT_CONFIG_VALUE_2': 'false', 'XDG_RUNTIME_DIR': '/run/user/2002', 'LANG': 'en_US.UTF-8', 'LS_COLORS': '', 'ROS_DOMAIN_ID': '0', 'AMENT_PREFIX_PATH': '/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg:/opt/ros/jazzy', 'COPILOT_AGENT_SESSION_ID': '9c446edc-9529-41cf-9552-d6e9f837f753', 'SHELL': '/bin/bash', 'COPILOT_RUNTIME_PROCESS_FILE_LOGGING': '1', 'GIT_TERMINAL_PROMPT': '0', 'GIT_CONFIG_KEY_0': 'safe.bareRepository', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GIT_CONFIG_KEY_1': 'credential.interactive', 'GIT_CONFIG_KEY_2': 'core.fsmonitor', 'COPILOT_MCP_APPS': 'true', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg', 'AUTO_APPROVAL': 'true', 'LC_ALL': 'en_US.UTF-8', 'SSH_CONNECTION': '10.0.0.154 58612 10.0.0.180 22', 'XDG_DATA_DIRS': '/usr/share/gnome:/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'COPILOT_ENABLE_BUILTIN_GITHUB_MCP': 'true', 'PYTHONPATH': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:/home/cogni/cognicar_sdk/python:/home/cogni/cognicar_sdk/exercises/1_path_tracking:/home/cogni/cognicar_sdk/exercises/3_low_level_control:/opt/ros/jazzy/lib/python3.12/site-packages', 'COPILOT_EXP_COPILOT_CLI_EXECUTION_SUBAGENT_MODEL': 'gpt-5.6-luna', 'COLCON': '1', 'COPILOT_CLI_ENABLED_FEATURE_FLAGS': 'SHELL_SPAWN_BACKEND,DYNAMIC_AUTO_TIERS', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor', 'PYTHONDONTWRITEBYTECODE': '1', 'PYTEST_ADDOPTS': '--tb=short --junit-xml=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/pytest.xml --junit-prefix=car_tests_pkg -o cache_dir=/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/.pytest_cache'}, 'shell': False}
+[0.600935] (-) TimerEvent: {}
+[0.701200] (-) TimerEvent: {}
+[0.801502] (-) TimerEvent: {}
+[0.901814] (-) TimerEvent: {}
+[1.002120] (-) TimerEvent: {}
+[1.102450] (-) TimerEvent: {}
+[1.202796] (-) TimerEvent: {}
+[1.303142] (-) TimerEvent: {}
+[1.403485] (-) TimerEvent: {}
+[1.503826] (-) TimerEvent: {}
+[1.604208] (-) TimerEvent: {}
+[1.704613] (-) TimerEvent: {}
+[1.808587] (-) TimerEvent: {}
+[1.908881] (-) TimerEvent: {}
+[2.009208] (-) TimerEvent: {}
+[2.109559] (-) TimerEvent: {}
+[2.209906] (-) TimerEvent: {}
+[2.310225] (-) TimerEvent: {}
+[2.410560] (-) TimerEvent: {}
+[2.510923] (-) TimerEvent: {}
+[2.611276] (-) TimerEvent: {}
+[2.615326] (car_tests_pkg) StdoutLine: {'line': b'============================= test session starts ==============================\n'}
+[2.615857] (car_tests_pkg) StdoutLine: {'line': b'platform linux -- Python 3.12.3, pytest-7.4.4, pluggy-1.4.0\n'}
+[2.616092] (car_tests_pkg) StdoutLine: {'line': b'cachedir: /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/.pytest_cache\n'}
+[2.616300] (car_tests_pkg) StdoutLine: {'line': b'rootdir: /home/cogni/MarekM_Bachelors/ros2_ws/src/car_tests_pkg\n'}
+[2.616486] (car_tests_pkg) StdoutLine: {'line': b'plugins: launch-testing-ros-0.26.12, ament-pep257-0.17.5, launch-testing-3.4.11, ament-xmllint-0.17.5, ament-lint-0.17.5, ament-flake8-0.17.5, ament-copyright-0.17.5, cov-4.1.0, colcon-core-0.21.0\n'}
+[2.616726] (car_tests_pkg) StdoutLine: {'line': b'collected 0 items / 1 error\n'}
+[2.616897] (car_tests_pkg) StdoutLine: {'line': b'\n'}
+[2.617063] (car_tests_pkg) StdoutLine: {'line': b'==================================== ERRORS ====================================\n'}
+[2.617231] (car_tests_pkg) StdoutLine: {'line': b'________________________ ERROR collecting test session _________________________\n'}
+[2.617391] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3/dist-packages/pluggy/_hooks.py:501: in __call__\n'}
+[2.617556] (car_tests_pkg) StdoutLine: {'line': b'    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)\n'}
+[2.617720] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3/dist-packages/pluggy/_manager.py:119: in _hookexec\n'}
+[2.617892] (car_tests_pkg) StdoutLine: {'line': b'    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)\n'}
+[2.618054] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3/dist-packages/_pytest/python.py:215: in pytest_collect_file\n'}
+[2.618217] (car_tests_pkg) StdoutLine: {'line': b'    module: Module = ihook.pytest_pycollect_makemodule(\n'}
+[2.618386] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3/dist-packages/_pytest/config/compat.py:66: in fixed_hook\n'}
+[2.618549] (car_tests_pkg) StdoutLine: {'line': b'    return hook(**kw)\n'}
+[2.618715] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3/dist-packages/pluggy/_hooks.py:501: in __call__\n'}
+[2.619843] (car_tests_pkg) StdoutLine: {'line': b'    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)\n'}
+[2.620130] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3/dist-packages/pluggy/_manager.py:119: in _hookexec\n'}
+[2.620331] (car_tests_pkg) StdoutLine: {'line': b'    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)\n'}
+[2.620535] (car_tests_pkg) StdoutLine: {'line': b'/opt/ros/jazzy/lib/python3.12/site-packages/launch_testing/pytest/hooks.py:193: in pytest_pycollect_makemodule\n'}
+[2.620748] (car_tests_pkg) StdoutLine: {'line': b'    entrypoint = find_launch_test_entrypoint(path)\n'}
+[2.620909] (car_tests_pkg) StdoutLine: {'line': b'/opt/ros/jazzy/lib/python3.12/site-packages/launch_testing/pytest/hooks.py:183: in find_launch_test_entrypoint\n'}
+[2.621065] (car_tests_pkg) StdoutLine: {'line': b'    module = import_path(path, root=None)\n'}
+[2.621217] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3/dist-packages/_pytest/pathlib.py:567: in import_path\n'}
+[2.621417] (car_tests_pkg) StdoutLine: {'line': b'    importlib.import_module(module_name)\n'}
+[2.621574] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n'}
+[2.621738] (car_tests_pkg) StdoutLine: {'line': b'    return _bootstrap._gcd_import(name[level:], package, level)\n'}
+[2.621896] (car_tests_pkg) StdoutLine: {'line': b'<frozen importlib._bootstrap>:1387: in _gcd_import\n'}
+[2.622054] (car_tests_pkg) StdoutLine: {'line': b'    ???\n'}
+[2.622209] (car_tests_pkg) StdoutLine: {'line': b'<frozen importlib._bootstrap>:1360: in _find_and_load\n'}
+[2.622363] (car_tests_pkg) StdoutLine: {'line': b'    ???\n'}
+[2.622514] (car_tests_pkg) StdoutLine: {'line': b'<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked\n'}
+[2.622668] (car_tests_pkg) StdoutLine: {'line': b'    ???\n'}
+[2.622822] (car_tests_pkg) StdoutLine: {'line': b'<frozen importlib._bootstrap>:935: in _load_unlocked\n'}
+[2.622979] (car_tests_pkg) StdoutLine: {'line': b'    ???\n'}
+[2.623134] (car_tests_pkg) StdoutLine: {'line': b'/usr/lib/python3/dist-packages/_pytest/assertion/rewrite.py:186: in exec_module\n'}
+[2.623288] (car_tests_pkg) StdoutLine: {'line': b'    exec(co, module.__dict__)\n'}
+[2.623441] (car_tests_pkg) StdoutLine: {'line': b'test/test_mypy.py:15: in <module>\n'}
+[2.623593] (car_tests_pkg) StdoutLine: {'line': b'    from ament_mypy.main import main\n'}
+[2.623749] (car_tests_pkg) StdoutLine: {'line': b"E   ModuleNotFoundError: No module named 'ament_mypy'\n"}
+[2.624548] (car_tests_pkg) StdoutLine: {'line': b'- generated xml file: /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/pytest.xml -\n'}
+[2.624785] (car_tests_pkg) StdoutLine: {'line': b'=========================== short test summary info ============================\n'}
+[2.625424] (car_tests_pkg) StdoutLine: {'line': b"ERROR  - ModuleNotFoundError: No module named 'ament_mypy'\n"}
+[2.625639] (car_tests_pkg) StdoutLine: {'line': b'!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n'}
+[2.625812] (car_tests_pkg) StdoutLine: {'line': b'=============================== 1 error in 1.24s ===============================\n'}
+[2.711469] (-) TimerEvent: {}
+[2.811865] (-) TimerEvent: {}
+[2.846026] (car_tests_pkg) CommandEnded: {'returncode': 2}
+[2.847265] (car_tests_pkg) JobEnded: {'identifier': 'car_tests_pkg', 'rc': 2}
+[2.857163] (-) EventReactorShutdown: {}

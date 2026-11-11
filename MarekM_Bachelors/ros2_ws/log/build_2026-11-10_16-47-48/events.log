@@ -1,0 +1,82 @@
+[0.000000] (-) TimerEvent: {}
+[0.000636] (car_tests_pkg) JobQueued: {'identifier': 'car_tests_pkg', 'dependencies': OrderedDict()}
+[0.001146] (car_tests_pkg) JobStarted: {'identifier': 'car_tests_pkg'}
+[0.099521] (-) TimerEvent: {}
+[0.200084] (-) TimerEvent: {}
+[0.300668] (-) TimerEvent: {}
+[0.401206] (-) TimerEvent: {}
+[0.501713] (-) TimerEvent: {}
+[0.602221] (-) TimerEvent: {}
+[0.702721] (-) TimerEvent: {}
+[0.803240] (-) TimerEvent: {}
+[0.903764] (-) TimerEvent: {}
+[1.004279] (-) TimerEvent: {}
+[1.104796] (-) TimerEvent: {}
+[1.205318] (-) TimerEvent: {}
+[1.305826] (-) TimerEvent: {}
+[1.406426] (-) TimerEvent: {}
+[1.506982] (-) TimerEvent: {}
+[1.607519] (-) TimerEvent: {}
+[1.708028] (-) TimerEvent: {}
+[1.808579] (-) TimerEvent: {}
+[1.909084] (-) TimerEvent: {}
+[2.009583] (-) TimerEvent: {}
+[2.110097] (-) TimerEvent: {}
+[2.210601] (-) TimerEvent: {}
+[2.311100] (-) TimerEvent: {}
+[2.411648] (-) TimerEvent: {}
+[2.512296] (-) TimerEvent: {}
+[2.613027] (-) TimerEvent: {}
+[2.713697] (-) TimerEvent: {}
+[2.814205] (-) TimerEvent: {}
+[2.914701] (-) TimerEvent: {}
+[3.015197] (-) TimerEvent: {}
+[3.115693] (-) TimerEvent: {}
+[3.216236] (-) TimerEvent: {}
+[3.316757] (-) TimerEvent: {}
+[3.417305] (-) TimerEvent: {}
+[3.474903] (car_tests_pkg) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/build', '--no-deps', 'symlink_data'], 'cwd': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'cogni', 'SSH_CLIENT': '10.0.0.154 53920 22', 'XDG_SESSION_TYPE': 'tty', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/opt/rviz_ogre_vendor/lib:/opt/ros/jazzy/lib/aarch64-linux-gnu:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib64:/usr/local/cuda-13.2/lib64:', 'HOME': '/home/cogni', 'OLDPWD': '/home/cogni', 'SSH_TTY': '/dev/pts/0', 'ROS_PYTHON_VERSION': '3', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/2002/bus', 'DEBUGINFOD_URLS': 'https://debuginfod.ubuntu.com', 'ROS_DISTRO': 'jazzy', 'LOGNAME': 'cogni', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'TERM': 'xterm-256color', 'XDG_SESSION_ID': '3', 'PATH': '/home/cogni/.local/bin:/opt/ros/jazzy/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/src/tensorrt/bin:/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/src/tensorrt/bin:/usr/local/cuda-13.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin', 'XDG_RUNTIME_DIR': '/run/user/2002', 'LANG': 'en_US.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'SHELL': '/bin/bash', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg', 'LC_ALL': 'en_US.UTF-8', 'SSH_CONNECTION': '10.0.0.154 53920 10.0.0.180 22', 'XDG_DATA_DIRS': '/usr/share/gnome:/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages:/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor'}, 'shell': False}
+[3.517440] (-) TimerEvent: {}
+[3.617934] (-) TimerEvent: {}
+[3.718454] (-) TimerEvent: {}
+[3.819017] (-) TimerEvent: {}
+[3.919571] (-) TimerEvent: {}
+[4.020077] (-) TimerEvent: {}
+[4.120648] (-) TimerEvent: {}
+[4.221167] (-) TimerEvent: {}
+[4.286759] (car_tests_pkg) StdoutLine: {'line': b'running develop\n'}
+[4.321314] (-) TimerEvent: {}
+[4.421825] (-) TimerEvent: {}
+[4.522319] (-) TimerEvent: {}
+[4.622784] (-) TimerEvent: {}
+[4.723283] (-) TimerEvent: {}
+[4.808891] (car_tests_pkg) StdoutLine: {'line': b'running egg_info\n'}
+[4.809393] (car_tests_pkg) StdoutLine: {'line': b'creating car_tests_pkg.egg-info\n'}
+[4.823382] (-) TimerEvent: {}
+[4.859434] (car_tests_pkg) StdoutLine: {'line': b'writing car_tests_pkg.egg-info/PKG-INFO\n'}
+[4.860049] (car_tests_pkg) StdoutLine: {'line': b'writing dependency_links to car_tests_pkg.egg-info/dependency_links.txt\n'}
+[4.860488] (car_tests_pkg) StdoutLine: {'line': b'writing entry points to car_tests_pkg.egg-info/entry_points.txt\n'}
+[4.860794] (car_tests_pkg) StdoutLine: {'line': b'writing requirements to car_tests_pkg.egg-info/requires.txt\n'}
+[4.861001] (car_tests_pkg) StdoutLine: {'line': b'writing top-level names to car_tests_pkg.egg-info/top_level.txt\n'}
+[4.861296] (car_tests_pkg) StdoutLine: {'line': b"writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'\n"}
+[4.923515] (-) TimerEvent: {}
+[4.968024] (car_tests_pkg) StdoutLine: {'line': b"reading manifest file 'car_tests_pkg.egg-info/SOURCES.txt'\n"}
+[4.969441] (car_tests_pkg) StdoutLine: {'line': b"writing manifest file 'car_tests_pkg.egg-info/SOURCES.txt'\n"}
+[5.023643] (-) TimerEvent: {}
+[5.120555] (car_tests_pkg) StdoutLine: {'line': b'running build_ext\n'}
+[5.123600] (car_tests_pkg) StdoutLine: {'line': b'Creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/python3.12/site-packages/car-tests-pkg.egg-link (link to .)\n'}
+[5.123822] (-) TimerEvent: {}
+[5.125435] (car_tests_pkg) StdoutLine: {'line': b'Installing keyboard_controller script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg\n'}
+[5.125907] (car_tests_pkg) StdoutLine: {'line': b'Installing run_test script to /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/lib/car_tests_pkg\n'}
+[5.126433] (car_tests_pkg) StdoutLine: {'line': b'\n'}
+[5.126619] (car_tests_pkg) StdoutLine: {'line': b'Installed /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg\n'}
+[5.126822] (car_tests_pkg) StdoutLine: {'line': b'running symlink_data\n'}
+[5.127043] (car_tests_pkg) StdoutLine: {'line': b'creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/ament_index\n'}
+[5.127243] (car_tests_pkg) StdoutLine: {'line': b'creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index\n'}
+[5.127465] (car_tests_pkg) StdoutLine: {'line': b'creating /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index/packages\n'}
+[5.127632] (car_tests_pkg) StdoutLine: {'line': b'symbolically linking /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/resource/car_tests_pkg -> /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/ament_index/resource_index/packages\n'}
+[5.127896] (car_tests_pkg) StdoutLine: {'line': b'symbolically linking /home/cogni/MarekM_Bachelors/ros2_ws/build/car_tests_pkg/package.xml -> /home/cogni/MarekM_Bachelors/ros2_ws/install/car_tests_pkg/share/car_tests_pkg\n'}
+[5.224020] (-) TimerEvent: {}
+[5.247839] (car_tests_pkg) CommandEnded: {'returncode': 0}
+[5.295890] (car_tests_pkg) JobEnded: {'identifier': 'car_tests_pkg', 'rc': 0}
+[5.298297] (-) EventReactorShutdown: {}

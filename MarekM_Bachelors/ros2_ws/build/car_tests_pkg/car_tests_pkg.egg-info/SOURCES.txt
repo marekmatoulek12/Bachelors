@@ -3,6 +3,7 @@ setup.cfg
 setup.py
 car_tests_pkg/Blueprints.py
 car_tests_pkg/Class_Blueprints.py
+car_tests_pkg/Keyboard_Controller.py
 car_tests_pkg/Tests.py
 car_tests_pkg/__init__.py
 car_tests_pkg/py.typed

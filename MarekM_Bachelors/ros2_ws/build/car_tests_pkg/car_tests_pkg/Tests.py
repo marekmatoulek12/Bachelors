@@ -4,9 +4,9 @@ import numpy as np
 import rclpy
 from rclpy.signals import SignalHandlerOptions
 
-from .Blueprints import TestBluePrint, PIDController, PIDGains
+from .Blueprints import LoggingConnectionBP, PIDController, PIDGains
 
-class InitTest(TestBluePrint):
+class InitTest(LoggingConnectionBP):
     def __init__(self, node_name: str = "init_test", test_length: float = 20.0, timer_period: float = 0.1):
         super().__init__(node_name=node_name,
                          control_loop=self.control_loop,
@@ -28,6 +28,8 @@ class InitTest(TestBluePrint):
             self.get_logger().info("Test length exceeded. Stopping test.")
             return False
 
+
+
         # Logovani pozadavku
         self.log_commands(rpm_req, steering_angle_req)
 
@@ -35,11 +37,11 @@ class InitTest(TestBluePrint):
         self.publish_data(rpm_req, steering_angle_req)
 
         # Logovani do CSV
-        self.log_data(rpm_req, steering_angle_req)
+        self.log_data()
 
         return True
 
-class SineWaveTest(TestBluePrint):
+class SineWaveTest(LoggingConnectionBP):
     def __init__(self, node_name: str = "sine_wave_test", target_speed_m_s: float = 1.0, sine_freq: float = 1.0, sine_ampl: float = 1.0, test_length: float = 20.0, timer_period: float = 0.1):
         super().__init__(node_name=node_name,
                          control_loop=self.control_loop,
@@ -106,7 +108,7 @@ class SineWaveTest(TestBluePrint):
             self.publish_data(rpm_req, steering_angle_req)
     
             # Logovani do CSV
-            self.log_data(rpm_req, steering_angle_req)
+            self.log_data()
     
         return True
     
@@ -115,7 +117,7 @@ class SineWaveTest(TestBluePrint):
         # ros2 bag record -o muj_rampsteer_bag /state/odometry /servo/front/angle_req /powertrain/rl/rpm_req /powertrain/rr/rpm_req
 
 
-class RampSteerTest(TestBluePrint):
+class RampSteerTest(LoggingConnectionBP):
     def __init__(self, node_name: str = "ramp_steer_test", target_speed_m_s: float = 10.0, steering_angle_rate_deg_s: float = 1.0, test_length: float = 20.0, timer_period: float = 0.1):
         super().__init__(node_name=node_name,
                          control_loop=self.control_loop,
@@ -183,7 +185,7 @@ class RampSteerTest(TestBluePrint):
             self.publish_data(rpm_req, steering_angle_req)
             
             # Logovani do CSV
-            self.log_data(rpm_req, steering_angle_req)
+            self.log_data()
 
         return True
     
@@ -191,7 +193,7 @@ class RampSteerTest(TestBluePrint):
         # otevrit v druhem terminalu:
         # ros2 bag record -o muj_rampsteer_bag /state/odometry /servo/front/angle_req /powertrain/rl/rpm_req /powertrain/rr/rpm_req
 
-class RampSpeedTest(TestBluePrint):
+class RampSpeedTest(LoggingConnectionBP):
     def __init__(self, node_name: str = 'ramp_speed_test', start_speed_m_s: float = 10.0, target_steer_deg: float = 5.0, acceleration_m_ss: float = 1.0, test_length: float = 20.0, timer_period: float = 0.1):
         super().__init__(node_name=node_name,
                          control_loop=self.control_loop,
@@ -272,10 +274,10 @@ class RampSpeedTest(TestBluePrint):
             self.log_commands(rpm_req, steering_angle_req)
 
             # Publikovani pozadavku
-            self.publish_data(rpm_req, steering_angle_req)
+            self.publish_data()
             
             # Logovani do CSV
-            self.log_data(rpm_req, steering_angle_req)
+            self.log_data()
 
         return True
 
@@ -399,12 +401,19 @@ def main(args=None):
     - casem se to auto urve 
     """
     start_speed_m_s = 1.0 
-    target_steer_deg = 20.0
-    acceleration_m_ss = 0.3  
+    target_steer_deg = 0.0
+    acceleration_m_ss = 0.0  
     test_length = 20.0  # seconds
     timer_period = 0.01  # 100 Hz
+
+    def sgn_str(x:int):
+        if x >= 0:
+            return ""
+        else:
+            return "_"
+    
     node = RampSpeedTest(
-        node_name=f"rst_{int(target_steer_deg)}_{int(acceleration_m_ss)}",
+        node_name=f"rst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(acceleration_m_ss)}",
         start_speed_m_s=start_speed_m_s,
         target_steer_deg=target_steer_deg,
         acceleration_m_ss=acceleration_m_ss,

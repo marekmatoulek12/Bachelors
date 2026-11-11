@@ -16,8 +16,6 @@ from .Class_Blueprints import PIDGains, TwinTrackParams
 # source /home/cogni/cognicar_sdk/env.sh
 # source install/setup.bash
 
-import cognicar_interface as ci
-
 class SimpleConnectionBP(Node):
     def __init__(self, node_name: str, 
                  control_loop: Callable[[], bool],
@@ -60,9 +58,8 @@ class SimpleConnectionBP(Node):
 
     def publish_data(self):
         # Publikovani dat do ROS topicu
-        # Automaticky prepocet pozadavku
         msg_steer = Float64()
-        msg_steer.data = self.steer_real2cmd_rad(self.steer_rad_req)
+        msg_steer.data = self.steer_rad_req
         self.pub_steer.publish(msg_steer)
 
         msg_rpm_rl = Float64()
@@ -82,8 +79,8 @@ class SimpleConnectionBP(Node):
         # Pri Ctrl+C muze byt ROS kontext uz neplatny, proto nepublikujeme, pokud nefunguje.
         try:
             if rclpy.ok():
-                # snaha zastavit auto
-                self.publish_data(0.0, 0.0)
+                self.log_commands(0.0, 0.0)
+                self.publish_data()
                 self.get_logger().info("Resetovaci zprava odeslana")
 
                 timeout = Duration(seconds=1.0)
@@ -457,7 +454,7 @@ class LoggingConnectionBP(Node):
             self.rr_rpm_fb,
             self.fl_rpm,
             self.fr_rpm,
-            self.real_steer_rad,
+            # self.real_steer_rad,
             )
         if any(v is None or not isfinite(float(v)) for v in values):
             if not self._missing_data_warning:
@@ -492,10 +489,10 @@ class LoggingConnectionBP(Node):
     def update_ekf_from_wheels(self, use: bool = True):
         # Máme všechna potřebná data?
         if (self.fl_rpm is not None and self.fr_rpm is not None and 
-            self.real_steer_rad is not None and self.yaw_rate is not None):
+            self.cmd_steer_rad is not None and self.yaw_rate is not None):
             
             speed = self.rpm2vx((self.fl_rpm + self.fr_rpm) / 2)
-            steering_angle = self.real_steer_rad
+            steering_angle = self.cmd_steer_rad
             
             # Kinematický výpočet
             z_vx = cos(steering_angle) * speed
@@ -544,8 +541,6 @@ class LoggingConnectionBP(Node):
     @staticmethod
     def rpm2rad_s(rpm: float | np.ndarray) -> float | np.ndarray:
         return rpm * (2.0 * np.pi / 60.0)
-
-    
 
 class PIDController:
     """Discrete PID controller with clamping and simple anti-windup."""

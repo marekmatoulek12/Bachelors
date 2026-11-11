@@ -5,7 +5,7 @@ import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize_scalar, curve_fit
 
 # --- KONFIGURACE ---
 YAW_RATE_COL = 'yaw_rate'          # Název sloupce z reálných logů
@@ -110,11 +110,60 @@ def optimize_steering_angle(target_yaw_rate, velocity):
     else:
         return np.nan
 
-def calibrate_log(file_path, A, B):
+def steer_cmd2real_rad(cmd_rad):
+    """
+    Převede povel řízení v radiánech na fyzický simulační úhel v radiánech
+    podle kalibrované 3-segmentové funkce s mrtvou zónou.
+    """
+    # Parametry z kalibračního grafu (hodnoty ve stupních)
+    xb1_deg = -3.03
+    xb2_deg = 2.67
+    
+    k_left = 0.748
+    b_left_deg = 2.85
+    
+    k_right = 0.743
+    b_right_deg = -1.40
+    
+    offset_deg = 0.58
+    
+    # Převod vstupního povelu z radiánů na stupně pro vyhodnocení
+    cmd_deg = np.rad2deg(cmd_rad)
+    
+    # Inicializace výstupního pole stejného tvaru (podporuje skalár i numpy array)
+    real_steer_deg = np.zeros_like(cmd_deg)
+    
+    # Vyhodnocení pro skalární vstup
+    if np.isscalar(cmd_deg):
+        if cmd_deg < xb1_deg:
+            real_steer_deg = k_left * cmd_deg + b_left_deg
+        elif cmd_deg > xb2_deg:
+            real_steer_deg = k_right * cmd_deg + b_right_deg
+        else:
+            real_steer_deg = offset_deg
+            
+    # Vyhodnocení pro numpy pole (používáno v pandasu)
+    else:
+        # Levá část
+        mask_left = cmd_deg < xb1_deg
+        real_steer_deg[mask_left] = k_left * cmd_deg[mask_left] + b_left_deg
+        
+        # Střed (mrtvá zóna)
+        mask_mid = (cmd_deg >= xb1_deg) & (cmd_deg <= xb2_deg)
+        real_steer_deg[mask_mid] = offset_deg
+        
+        # Pravá část
+        mask_right = cmd_deg > xb2_deg
+        real_steer_deg[mask_right] = k_right * cmd_deg[mask_right] + b_right_deg
+
+    # Výsledek musí být převeden zpět na radiány
+    return np.deg2rad(real_steer_deg)
+
+def calibrate_log(file_path):
     STEERING_CMD_COL = "cmd_steer_rad"
     """
-    Načte zadaný .csv soubor, přidá sloupec real_cmd_steer obsahující data
-    převedená lineární funkcí Ax + B a uloží jej jako calibrated_{original_name}.csv
+    Načte zadaný .csv soubor, přidá sloupec real_steer_rad obsahující data
+    převedená 3-segmentovou funkcí s mrtvou zónou a uloží jej jako calibrated_{original_name}.csv
     do složky Model_lib_and_sim/Identification.
     """
     if not os.path.exists(file_path):
@@ -138,8 +187,9 @@ def calibrate_log(file_path, A, B):
             print(f"Chyba: V souboru {file_path} nebyl nalezen sloupec pro povel řízení.")
             return
 
-    # Přepočet lineární funkcí Ax + B a uložení do nového sloupce
-    df['real_steer_rad'] = df[cmd_col] * A + B * np.pi/180 # predpoklad, ze puvodni odvozeni je ze stupnu, tedy je nutne prepocitat na radiany
+    # Aplikace nového třísegmentového kalibračního modelu
+    # Vstup do funkce musí být v radiánech, což data v logu už jsou
+    df['real_steer_rad'] = steer_cmd2real_rad(df[cmd_col].to_numpy())
 
     # Výstupní složka Model_lib_and_sim/Identification/Calibrated
     target_dir = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'Calibrated')
@@ -151,6 +201,21 @@ def calibrate_log(file_path, A, B):
 
     df.to_csv(output_path, index=False)
     print(f"Kalibrovaný soubor uložen do: {output_path}")
+
+def piecewise_3_segments_horizontal(x, k1, k3, xb1, xb2, y_offset):
+    """
+    Spojitá 3-segmentová funkce s přesně vodorovnou mrtvou zónou:
+    - Segment 1 (x < xb1): směrnice k1
+    - Segment 2 (xb1 <= x <= xb2): konstantní hodnota y_offset (vodorovně)
+    - Segment 3 (x > xb2): směrnice k3
+    """
+    condlist = [x < xb1, (x >= xb1) & (x <= xb2), x > xb2]
+    funclist = [
+        lambda x: y_offset + k1 * (x - xb1),
+        lambda x: y_offset,
+        lambda x: y_offset + k3 * (x - xb2)
+    ]
+    return np.piecewise(x, condlist, funclist)
 
 def main():
     search_pattern = os.path.join(repo_root, '**', 'rst_*_log_*.csv')
@@ -168,9 +233,11 @@ def main():
     results = []
 
     for file in log_files:
-        match = re.search(r'rst_(-?\d+)', file)
+        match = re.search(r'rst_([-_]?\d+)', file)
         if not match: continue
-        cmd_angle = float(match.group(1))
+        
+        angle_str = match.group(1).replace('_', '-')
+        cmd_angle = float(angle_str)
 
         try:
             df = pd.read_csv(file)
@@ -181,6 +248,7 @@ def main():
             real_yaw_rate = steady_df[yaw_col].mean()
             real_velocity = steady_df[vel_col].mean()
             
+            # Navráceno: Výpis stavu zpracovávaného logu
             print(f"Zpracován Log: {os.path.basename(file)} | Cmd: {cmd_angle}° | V_x: {real_velocity:.2f} m/s | Yaw: {real_yaw_rate:.3f} rad/s")
 
             results.append({
@@ -189,19 +257,13 @@ def main():
                 'real_velocity': real_velocity
             })
         except Exception as e:
+            # Navráceno: Informace o přeskočených souborech
             print(f"Přeskočeno {os.path.basename(file)}: chybí sloupce nebo nelze načíst ({e})")
 
     if not results: return
 
-    results_df = pd.DataFrame(results)
-
-    # 1. Odstranění NaN hodnot (pokud se nějaké načetly)
-    results_df = results_df.dropna()
-
-    # 2. Filtrace anomálií: Ponecháme jen testy, kde byla rychlost mezi 0.5 a 1.5 m/s
+    results_df = pd.DataFrame(results).dropna()
     results_df = results_df[(results_df['real_velocity'] > 0.5) & (results_df['real_velocity'] < 1.5)]
-
-    # 3. Sloučení pomocí mediánu (medián je mnohem odolnější vůči případným dalším extrémům než průměr)
     results_df = results_df.sort_values(by='cmd_angle').groupby('cmd_angle').median().reset_index()
 
     print("\nOptimalizuji úhly v simulaci (toto chvíli potrvá)...")
@@ -209,32 +271,109 @@ def main():
     for idx, row in results_df.iterrows():
         opt_angle = optimize_steering_angle(row['real_yaw_rate'], row['real_velocity'])
         sim_angles.append(opt_angle)
+        # Navráceno: Výpis průběžných výsledků z optimalizátoru simulace
         print(f"  Povel {row['cmd_angle']}° -> Simulační úhel {opt_angle:.2f}°")
 
     results_df['sim_angle'] = sim_angles
+    results_df = results_df.dropna()
 
-    coeffs = np.polyfit(results_df['cmd_angle'], results_df['sim_angle'], 1)
+    # ... (předchozí kód až k načtení x_data a y_data) ...
+    x_data = results_df['cmd_angle'].to_numpy()
+    y_data = results_df['sim_angle'].to_numpy()
+
+    # --- URČENÍ FIXNÍHO OFFSETU ZE STŘEDOVÝCH BODŮ ---
+    # Zprůměrujeme body, které leží blízko nuly (např. od -1° do 1°)
+    mask_center = (x_data >= -1.0) & (x_data <= 1.0)
+    if np.sum(mask_center) > 0:
+        fixed_y_offset = np.mean(y_data[mask_center])
+    else:
+        # Fallback, pokud by u nuly nebyly žádné body
+        fixed_y_offset = 0.0
+        
+    print(f"Fixovaný offset ze středových bodů: {fixed_y_offset:.4f}°")
+
+    # Upravená funkce, která neočekává y_offset jako volný parametr, ale používá fixní
+    def piecewise_3_segments_fixed_horizontal(x, k1, k3, xb1, xb2):
+        condlist = [x < xb1, (x >= xb1) & (x <= xb2), x > xb2]
+        funclist = [
+            lambda x: fixed_y_offset + k1 * (x - xb1),
+            lambda x: fixed_y_offset,
+            lambda x: fixed_y_offset + k3 * (x - xb2)
+        ]
+        return np.piecewise(x, condlist, funclist)
+
+    # --- FITACE ZBÝVAJÍCÍCH PARAMETRŮ ---
+    # Parametry: [k1, k3, xb1, xb2]
+    p0 = [0.75, 0.75, -3.0, 3.0]
+    bounds = (
+        [0.1, 0.1, -15.0,  0.1],  # spodní limity
+        [2.0, 2.0,  -0.1, 15.0]   # horní limity
+    )
+
+    try:
+        popt, _ = curve_fit(piecewise_3_segments_fixed_horizontal, x_data, y_data, p0=p0, bounds=bounds)
+        k1, k3, xb1, xb2 = popt
+    except Exception as e:
+        print(f"Fallback na odhad přímek: {e}")
+        k1, k3 = 0.75, 0.75
+        xb1, xb2 = -3.0, 3.0
+
+    b1 = fixed_y_offset - k1 * xb1
+    b2 = fixed_y_offset
+    b3 = fixed_y_offset - k3 * xb2
+
+    print("\n=== VÝSLEDKY KALIBRACE S FIXNÍ VODOROVNOU MRTVOU ZÓNOU ===")
+    print(f"Levá oblast  (x < {xb1:.2f}°):  y = {k1:.4f}x + {b1:.4f}")
+    print(f"Mrtvá zóna   (hystereze):   y = {b2:.4f} (konstanta)")
+    print(f"Pravá oblast (x > {xb2:.2f}°):  y = {k3:.4f}x + {b3:.4f}")
+    print(f"Offset (posun v neutrálu):     {fixed_y_offset:.4f}°")
+    print(f"Zlom vlevo:  [{xb1:.2f}°, {fixed_y_offset:.2f}°]")
+    print(f"Zlom vpravo: [{xb2:.2f}°, {fixed_y_offset:.2f}°]")
+    # ... (zbytek vykreslování zůstává identický, stačí jen přejmenovat proměnnou offset na fixed_y_offset)
+
+    # --- VIZUALIZACE ---
+    plt.figure(figsize=(9, 6))
+    plt.scatter(x_data, y_data, color='red', zorder=5, label='Optimalizované body')
+
+    # Generování bodů pro vykreslení spojité křivky
+    x_left = np.linspace(min(x_data) - 2, xb1, 50)
+    x_mid = np.linspace(xb1, xb2, 50)
+    x_right = np.linspace(xb2, max(x_data) + 2, 50)
+
+    # Zelená křivka
+    plt.plot(x_left, k1 * x_left + b1, color='#00D154', linewidth=2.5, label='Aproximace (s mrtvou zónou)')
+    plt.plot(x_mid, np.full_like(x_mid, fixed_y_offset), color='#00D154', linewidth=2.5)
+    plt.plot(x_right, k3 * x_right + b3, color='#00D154', linewidth=2.5)
+
+    # Zvýraznění bodů zlomů
+    plt.scatter([xb1, xb2], [fixed_y_offset, fixed_y_offset], color='purple', s=70, zorder=6, label='Body zlomů')
+
+    # Textový box s parametry
+    info_text = (
+        f"Offset: {fixed_y_offset:+.2f}°\n"
+        f"Zlom L: [{xb1:.2f}°, {fixed_y_offset:.2f}°]\n"
+        f"Zlom P: [{xb2:.2f}°, {fixed_y_offset:.2f}°]\n"
+        f"Levá:  y = {k1:.3f}x {b1:+.2f}\n"
+        f"Střed: y = {b2:+.2f} (Dead zone)\n"
+        f"Pravá: y = {k3:.3f}x {b3:+.2f}"
+    )
     
-    print("\n=== VÝSLEDEK KALIBRACE ===")
-    print(f"rovnice: Fyzický simulační úhel = {coeffs[0]:.4f} * povel + {coeffs[1]:.4f}")
-    
-    plt.figure(figsize=(8, 5))
-    plt.scatter(results_df['cmd_angle'], results_df['sim_angle'], color='r', zorder=5)
-    x_vals = np.linspace(0, max(results_df['cmd_angle']) + 5, 50)
-    plt.plot(x_vals, np.poly1d(coeffs)(x_vals), 'b-', label=f'Fit: y = {coeffs[0]:.4f}x + {coeffs[1]:.4f}')
-    
-    plt.title('Kalibrace: Povel vs Fyzický úhel v simulaci')
+    plt.gca().text(0.03, 0.95, info_text, transform=plt.gca().transAxes,
+                   fontsize=9, verticalalignment='top', family='monospace',
+                   bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.9, edgecolor='gray'))
+
+    plt.title('Kalibrace řízení: Aproximace s vodorovnou mrtvou zónou')
     plt.xlabel('Povel z logu (stupně)')
     plt.ylabel('Hledaný fyzický úhel simulace (stupně)')
-    plt.grid(True)
-    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.legend(loc='lower right')
     plt.tight_layout()
     
-    plot_path = os.path.join(repo_root, 'Model_lib_and_sim/Identification/steering_calibration_result.png')
-    plt.savefig(plot_path)
-    print(f"Graf uložen do: {plot_path}")
+    plot_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'steering_calibration_result_deadzone.png')
+    plt.savefig(plot_path, dpi=300)
+    print(f"\nGraf uložen do: {plot_path}")
 
 if __name__ == '__main__':
-    # main()..
+    # main()
     file_path = os.path.join(repo_root, 'log_files', '18.10.2026', 'rst_20_log_1792330050.csv')
-    calibrate_log(file_path, 0.7448, -1.5184)
+    calibrate_log(file_path)

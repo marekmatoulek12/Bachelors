@@ -16,11 +16,110 @@ from .Class_Blueprints import PIDGains, TwinTrackParams
 # source /home/cogni/cognicar_sdk/env.sh
 # source install/setup.bash
 
-import cognicar_interface as ci
+class SimpleConnectionBP(Node):
+    def __init__(self, node_name: str, 
+                 control_loop: Callable[[], bool],
+                 timer_period: float,
+                 ):
+        super().__init__(node_name)
 
+        cogni_cfg = ci.Config()
+        cogni_cfg.backend = ci.Backend.Ros
+        cogni_cfg.simulation = False
+        self.cogni_car = ci.Cognicar()
+        if not self.cogni_car.Initialize(cogni_cfg):
+            raise SystemExit("Could not connect to the car or simulator.")
+        if not self.cogni_car.SetLidarEnabled(True):
+            raise SystemExit("Could not start LiDAR localization.")
+        self.car = TwinTrackParams()
 
+        
+        self.steer_cmd2real_rad_A = 0.7448
+        self.steer_cmd2real_rad_B = -1.5184
 
-class TestBluePrint(Node):
+        self.control_loop = control_loop
+        self.should_stop = False
+
+        self.timer = self.create_timer(timer_period, self._timer_callback)
+        
+        # Publishers pro rizeni
+        self.pub_steer = self.create_publisher(Float64, '/servo/front/angle_req', 10)
+        self.pub_rpm_rl = self.create_publisher(Float64, '/powertrain/rl/rpm_req', 10)
+        self.pub_rpm_rr = self.create_publisher(Float64, '/powertrain/rr/rpm_req', 10)
+
+    def _timer_callback(self):
+        keep_running = self.control_loop()
+        if not keep_running:
+            self.should_stop = True
+
+    def log_commands(self, rpm_req, steer_rad_req):
+        self.steer_rad_req = steer_rad_req
+        self.rpm_req = rpm_req
+
+    def publish_data(self):
+        # Publikovani dat do ROS topicu
+        msg_steer = Float64()
+        msg_steer.data = self.steer_rad_req
+        self.pub_steer.publish(msg_steer)
+
+        msg_rpm_rl = Float64()
+        msg_rpm_rr = Float64()
+        # prevodovka - rpm_req na zadni kola = 2 * rpm na motory
+        msg_rpm_rl.data = 2 * self.rpm_req
+        msg_rpm_rr.data = -2 * self.rpm_req # motory jsou rizeny opacne
+        self.pub_rpm_rl.publish(msg_rpm_rl)
+        self.pub_rpm_rr.publish(msg_rpm_rr)
+
+    def destroy_blueprint_node(self):
+        # Zastaveni timeru a ukonceni node
+        if self.timer is not None:
+            self.timer.cancel()
+        self.should_stop = True
+
+        # Pri Ctrl+C muze byt ROS kontext uz neplatny, proto nepublikujeme, pokud nefunguje.
+        try:
+            if rclpy.ok():
+                self.log_commands(0.0, 0.0)
+                self.publish_data()
+                self.get_logger().info("Resetovaci zprava odeslana")
+
+                timeout = Duration(seconds=1.0)
+                for publisher in (self.pub_steer, self.pub_rpm_rl, self.pub_rpm_rr):
+                    if not publisher.wait_for_all_acked(timeout):
+                        self.get_logger().warning(
+                            f"Neprislo potvrzeni doruceni z topicu {publisher.topic_name}."
+                        )
+
+        except Exception:
+            self.get_logger().warning("Shutdown publish selhal, pokracuji v ukonceni node.")
+        finally:
+            try:
+                self.cogni_car.Shutdown()
+            finally:
+                self.get_logger().info(f"Spojeni preruseno")
+                super().destroy_node()
+
+    def vx2rpm(self, vx: float):
+        return vx * 60 / (2 * pi * self.car.rear_wheel_radius)
+
+    def rpm2vx(self, rpm: float):
+        return rpm * (2 * pi * self.car.rear_wheel_radius) / 60
+
+    def steer_cmd2real_rad(self, cmd: float) -> float:
+        return self.steer_cmd2real_rad_A * cmd + self.steer_cmd2real_rad_B
+
+    def steer_real2cmd_rad(self, cmd: float) -> float:
+        return (cmd - self.steer_cmd2real_rad_B) / self.steer_cmd2real_rad_A
+
+    @staticmethod
+    def deg2rad(angle: float):
+        return angle * pi / 180
+
+    @staticmethod
+    def rad2deg(angle: float):
+        return angle * 180 / pi
+
+class LoggingConnectionBP(Node):
 
     ## --- CORE ---
     def __init__(self, node_name: str, 
@@ -38,6 +137,9 @@ class TestBluePrint(Node):
             raise SystemExit("Could not connect to the car or simulator.")
         if not self.cogni_car.SetLidarEnabled(True):
             raise SystemExit("Could not start LiDAR localization.")
+
+        self.steer_cmd2real_rad_A = 0.7448
+        self.steer_cmd2real_rad_B = -1.5184
 
         self.car = TwinTrackParams()
         self.control_loop = control_loop
@@ -64,10 +166,6 @@ class TestBluePrint(Node):
         self.pub_steer = self.create_publisher(Float64, '/servo/front/angle_req', 10)
         self.pub_rpm_rl = self.create_publisher(Float64, '/powertrain/rl/rpm_req', 10)
         self.pub_rpm_rr = self.create_publisher(Float64, '/powertrain/rr/rpm_req', 10)
-
-        # Otazka, jestli brat subscription z state/odometry nebo z gps/pose a map/twist
-        # odometry poskytuje vsechno najednou -> automaticky casove synchronizovane + je to modernejsi pristup
-        # issue je ze podle logu to vypada, ze z auta jde jen gps/pose a map/twist
 
         # Subscribers pro zpetnou vazbu               
         self.sub_gps = self.create_subscription(
@@ -106,13 +204,6 @@ class TestBluePrint(Node):
             self.fr_callback,
             10
         )
-        
-        self.sub_steer_rad_fb = self.create_subscription(
-            Float64,
-            '/servo/front/angle_fb',
-            self.servo_callback,
-            10
-        )
 
         # Nastaveni logovani do CSV
         self.log_filename = str(logs_dir / f'{self.get_name()}_log_{int(time.time())}.csv')
@@ -123,7 +214,7 @@ class TestBluePrint(Node):
             'timestamp',
             'cmd_rpm',
             'cmd_steer_rad',
-            'fb_steer_rad',
+            'real_steer_rad',
             'gps_x',
             'gps_y', 
             'gps_yaw',
@@ -153,7 +244,9 @@ class TestBluePrint(Node):
         self.fl_rpm         = None
         self.fr_rpm         = None
         self.cmd_steer_rad  = None
-        self.fb_steer_rad   = None
+        self.cmd_rpm        = None
+        self.real_steer_rad   = None
+
         self._missing_data_warning = False
 
         self.p_fl = (self.car.front_axle_len, self.car.front_track_width / 2)
@@ -245,7 +338,7 @@ class TestBluePrint(Node):
             return
 
 
-        self.fl_rpm = msg.data ## je to RPM nebo rad/s nebo?
+        self.fl_rpm = msg.data
         self.update_ekf_from_wheels(use= self.use_fw_encoders)
 
     def fr_callback(self, msg):
@@ -271,27 +364,22 @@ class TestBluePrint(Node):
             return
 
         self.rr_rpm_fb = -msg.data / 2 ## spatne nastavene motory
-
-    def servo_callback(self, msg):
-        if msg is None:
-            self.fb_steer_rad = float("nan")
-            return
-        self.fb_steer_rad = msg.data
         
     ## --- DATA HANDLING ---
     def log_commands(self, cmd_rpm, cmd_steer_rad):
-        self.cmd_steer_rad = cmd_steer_rad 
+        self.cmd_steer_rad = cmd_steer_rad
+        self.real_steer_rad = self.steer_cmd2real_rad(cmd_steer_rad)
         self.cmd_rpm = cmd_rpm
 
-    def log_data(self, cmd_rpm, cmd_steer_rad):
+    def log_data(self):
         # Logovani dat do CSV
         current_time = self.get_clock().now().nanoseconds / 1e9
         ellapsed_time = current_time - self.START_TIME
         self.csv_writer.writerow([
             ellapsed_time,
-            cmd_rpm,
-            cmd_steer_rad,
-            self.fb_steer_rad,
+            self.cmd_rpm,
+            self.cmd_steer_rad,
+            self.real_steer_rad,
             self.gps_x,
             self.gps_y,
             self.gps_yaw,
@@ -306,17 +394,18 @@ class TestBluePrint(Node):
             self.fr_rpm
         ])
 
-    def publish_data(self, cmd_rpm, cmd_steer_rad):
+    def publish_data(self):
         # Publikovani dat do ROS topicu
+        # Automaticky prepocet pozadavku
         msg_steer = Float64()
-        msg_steer.data = cmd_steer_rad
+        msg_steer.data = self.cmd_steer_rad
         self.pub_steer.publish(msg_steer)
 
         msg_rpm_rl = Float64()
         msg_rpm_rr = Float64()
         # prevodovka - cmd_rpm na zadni kola = 2 * rpm na motory
-        msg_rpm_rl.data = 2 * cmd_rpm
-        msg_rpm_rr.data = -2 * cmd_rpm # motory jsou rizeny opacne
+        msg_rpm_rl.data = 2 * self.cmd_rpm
+        msg_rpm_rr.data = -2 * self.cmd_rpm # motory jsou rizeny opacne
         self.pub_rpm_rl.publish(msg_rpm_rl)
         self.pub_rpm_rr.publish(msg_rpm_rr)
 
@@ -365,7 +454,7 @@ class TestBluePrint(Node):
             self.rr_rpm_fb,
             self.fl_rpm,
             self.fr_rpm,
-            # self.fb_steer_rad
+            # self.real_steer_rad,
             )
         if any(v is None or not isfinite(float(v)) for v in values):
             if not self._missing_data_warning:
@@ -427,6 +516,12 @@ class TestBluePrint(Node):
 
     def rpm2vx(self, rpm: float):
         return rpm * (2 * pi * self.car.rear_wheel_radius) / 60
+
+    def steer_cmd2real_rad(self, cmd: float) -> float:
+        return self.steer_cmd2real_rad_A * cmd + self.steer_cmd2real_rad_B
+
+    def steer_real2cmd_rad(self, cmd: float) -> float:
+        return (cmd - self.steer_cmd2real_rad_B) / self.steer_cmd2real_rad_A
 
     @staticmethod
     def deg2rad(angle: float):

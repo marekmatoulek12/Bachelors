@@ -543,7 +543,7 @@ class DualTrackIdentification(BaseIdentification):
 def main():
     parser = argparse.ArgumentParser(description="Load a vehicle test log CSV.")
     parser.add_argument("csv_file", type=Path, help="Path to the CSV file to load")
-    parser.add_argument("out_file", type=Path, help="Path to which you want to save steer/yaw comparison .csv")
+    # parser.add_argument("out_file", type=Path, help="Path to which you want to save steer/yaw comparison .csv")
     args = parser.parse_args()
     
     data = pd.read_csv(args.csv_file)

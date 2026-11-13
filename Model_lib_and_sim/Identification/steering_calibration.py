@@ -202,6 +202,71 @@ def calibrate_log(file_path):
     df.to_csv(output_path, index=False)
     print(f"Kalibrovaný soubor uložen do: {output_path}")
 
+def calibrate_all_logs():
+    search_pattern = os.path.join(repo_root, '**', 'rst_*_log_*.csv')
+    log_files = glob.glob(search_pattern, recursive=True)
+    
+    if not log_files:
+        search_pattern = os.path.join(repo_root, '**', 'rst*.csv')
+        log_files = glob.glob(search_pattern, recursive=True)
+    
+    if not log_files:
+        print(f"Nenalezeny žádné CSV soubory rst_*_log_* v {repo_root}")
+        return
+    
+    print(f"Nalezeno {len(log_files)} logů. Analyzuji data...")
+    results = []
+    
+    for file in log_files:
+          
+        try:
+            calibrate_log(os.path.abspath(file))
+            print(f"Zpracován Log: {os.path.basename(file)}") 
+    
+        except Exception as e:
+            # Navráceno: Informace o přeskočených souborech
+            print(f"Přeskočeno {os.path.basename(file)}: chybí sloupce nebo nelze načíst ({e})")
+
+def merge_calibrated_logs(input_dir, output_filepath):
+    # Najde všechny CSV soubory ve složce (upravte si masku podle potřeby)
+    search_pattern = os.path.join(input_dir, 'calibrated_*.csv')
+    log_files = sorted(glob.glob(search_pattern))
+    
+    if not log_files:
+        print("Nenalezeny žádné soubory ke spojení.")
+        return
+
+    dataframes_to_merge = []
+    
+    for i, file in enumerate(log_files):
+        # Načtení konkrétního logu
+        df = pd.read_csv(file)
+        dataframes_to_merge.append(df)
+        
+        # Pokud se nejedná o poslední soubor, přidáme 100 nulových řádků
+        if i < len(log_files) - 1:
+            # Vytvoření pole nul o velikosti (100 řádků, počet sloupců aktuálního df)
+            zeros_array = np.zeros((100, len(df.columns)))
+            
+            # Převedení na DataFrame se stejnými názvy sloupců
+            df_zeros = pd.DataFrame(zeros_array, columns=df.columns)
+            
+            dataframes_to_merge.append(df_zeros)
+
+    # Sloučení všeho do jednoho velkého DataFrame
+    # ignore_index=True zajistí, že se řádky plynule přečíslují od 0 do N
+    final_df = pd.concat(dataframes_to_merge, ignore_index=True)
+    
+    # Uložení výsledku
+    final_df.to_csv(output_filepath, index=False)
+    print(f"Úspěšně spojeno {len(log_files)} souborů do: {output_filepath}")
+    print(f"Celkový počet řádků: {len(final_df)}")
+
+# --- POUŽITÍ ---
+# input_folder = 'Model_lib_and_sim/Identification/Calibrated'
+# output_file = 'Model_lib_and_sim/Identification/combined_calibrated_logs.csv'
+# merge_calibrated_logs(input_folder, output_file)
+
 def piecewise_3_segments_horizontal(x, k1, k3, xb1, xb2, y_offset):
     """
     Spojitá 3-segmentová funkce s přesně vodorovnou mrtvou zónou:
@@ -375,5 +440,9 @@ def main():
 
 if __name__ == '__main__':
     # main()
-    file_path = os.path.join(repo_root, 'log_files', '18.10.2026', 'rst_20_log_1792330050.csv')
-    calibrate_log(file_path)
+    # file_path = os.path.join(repo_root, 'log_files', '18.10.2026', 'rst_20_log_1792330050.csv')
+    # calibrate_log(file_path)
+    # calibrate_all_logs()
+    input_dir_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'Calibrated')
+    merged_file_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'Calibrated', 'combined_calibrated_logs.csv')
+    merge_calibrated_logs(input_dir_path, merged_file_path)

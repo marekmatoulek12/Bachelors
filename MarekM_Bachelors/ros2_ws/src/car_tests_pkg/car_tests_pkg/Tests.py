@@ -41,7 +41,6 @@ class InitTest(LoggingConnectionBP):
 
         return True
 
-
 class SineWaveTest(LoggingConnectionBP):
     def __init__(
         self,
@@ -64,7 +63,7 @@ class SineWaveTest(LoggingConnectionBP):
         self.test_length = test_length            # s
 
         self.speed2rpm_controller = PIDController(
-            gains=PIDGains(kp=0, ki=0.1, kd=0),
+            gains=PIDGains(kp=70, ki=150, kd=0),
             output_limit=(-200, 200),
             integrator_limit=(-200, 200),
         )
@@ -114,7 +113,6 @@ class SineWaveTest(LoggingConnectionBP):
 
         return True
 
-
 class RampSteerTest(LoggingConnectionBP):
     def __init__(
         self,
@@ -135,7 +133,7 @@ class RampSteerTest(LoggingConnectionBP):
         self.test_length = test_length                    # s
 
         self.speed2rpm_controller = PIDController(
-            gains=PIDGains(kp=0, ki=0.1, kd=0),
+            gains=PIDGains(kp=70, ki=150, kd=0),
             output_limit=(-200, 200),
             integrator_limit=(-200, 200),
         )
@@ -184,7 +182,6 @@ class RampSteerTest(LoggingConnectionBP):
             self.log_data()
 
         return True
-
 
 class RampSpeedTest(LoggingConnectionBP):
     def __init__(
@@ -395,7 +392,6 @@ class CombinedSteerSpeedTest(LoggingConnectionBP):
 
         return True
 
-
 def main(args=None):
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
 
@@ -438,37 +434,37 @@ def main(args=None):
     # )
 
     """ RAMP SPEED TEST SETUP """
-    # start_speed_m_s = 1.0
-    # target_steer_deg = 0.0
-    # acceleration_m_ss = 0.0
-    # test_length = 20.0  # seconds
-    # timer_period = 0.01  # 100 Hz
-    # node = RampSpeedTest(
-    #     node_name=f"rst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(acceleration_m_ss)}",
-    #     start_speed_m_s=start_speed_m_s,
-    #     target_steer_deg=target_steer_deg,
-    #     acceleration_m_ss=acceleration_m_ss,
-    #     test_length=test_length,
-    #     timer_period=timer_period,
-    # )
-
-    """ COMBINED STEER & SPEED TEST SETUP """
-    starting_velocity = 1.0    # m/s
-    target_steer_deg = 0.0     # deg
-    steering_rate = 5.0        # deg/s
-    acceleration_m_ss = 1.0    # m/s^2
-    test_length = 20.0         # seconds
-    timer_period = 0.01        # 100 Hz
-
-    node = CombinedSteerSpeedTest(
-        node_name=f"csst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(steering_rate)}_{int(starting_velocity)}_{int(acceleration_m_ss)}",
-        starting_velocity=starting_velocity,
+    start_speed_m_s = 1.0
+    target_steer_deg = 0.0
+    acceleration_m_ss = 0.0
+    test_length = 20.0  # seconds
+    timer_period = 0.01  # 100 Hz
+    node = RampSpeedTest(
+        node_name=f"rst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(acceleration_m_ss)}",
+        start_speed_m_s=start_speed_m_s,
         target_steer_deg=target_steer_deg,
-        steering_rate=steering_rate,
         acceleration_m_ss=acceleration_m_ss,
         test_length=test_length,
         timer_period=timer_period,
     )
+
+    """ COMBINED STEER & SPEED TEST SETUP """
+    # starting_velocity = 1.0    # m/s
+    # target_steer_deg = 0.0     # deg
+    # steering_rate = 5.0        # deg/s
+    # acceleration_m_ss = 1.0    # m/s^2
+    # test_length = 20.0         # seconds
+    # timer_period = 0.01        # 100 Hz
+
+    # node = CombinedSteerSpeedTest(
+    #     node_name=f"csst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(steering_rate)}_{int(starting_velocity)}_{int(acceleration_m_ss)}",
+    #     starting_velocity=starting_velocity,
+    #     target_steer_deg=target_steer_deg,
+    #     steering_rate=steering_rate,
+    #     acceleration_m_ss=acceleration_m_ss,
+    #     test_length=test_length,
+    #     timer_period=timer_period,
+    # )
 
     """ SPUSTENI TESTU """
     stop_requested = False

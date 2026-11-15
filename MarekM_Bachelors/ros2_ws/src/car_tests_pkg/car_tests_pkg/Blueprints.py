@@ -253,7 +253,7 @@ class LoggingConnectionBP(Node):
 
 
         self.fl_rpm = msg.data
-        self.update_ekf_from_wheels(use= self.use_fw_encoders)
+        self.update_ekf_from_wheels(use=self.use_fw_encoders)
 
     def fr_callback(self, msg):
         if msg is None:
@@ -261,7 +261,7 @@ class LoggingConnectionBP(Node):
             return
 
         self.fr_rpm = msg.data
-        self.update_ekf_from_wheels(use= self.use_fw_encoders)
+        self.update_ekf_from_wheels(use=self.use_fw_encoders)
 
     def rl_callback(self, msg):
         # Aktualni zmerena rpm kol
@@ -398,6 +398,7 @@ class LoggingConnectionBP(Node):
             return alpha_rl, k_rl, alpha_rr, k_rr
         return None, None, None, None
 
+    ## THIS WILL NEED TWEAKING -- USING FRONT WHEELS WHEN DRIFTING
     def update_ekf_from_wheels(self, use: bool = True):
         # Máme všechna potřebná data?
         if (self.fl_rpm is not None and self.fr_rpm is not None and 
@@ -418,6 +419,7 @@ class LoggingConnectionBP(Node):
             if is_slipping or not use:
                 # Obrovský šum -> EKF bude kola ignorovat a pojede jen na IMU + GPS
                 # Kola porad dava smysl pouzivat i pri skluzu, jen to asi nebude tak presne.
+
                 # 1000 je vycucany z prdele, tohle jeste bude potreba odladit
                 current_R = self.ekf.R_wheels * 1000.0 
             else:

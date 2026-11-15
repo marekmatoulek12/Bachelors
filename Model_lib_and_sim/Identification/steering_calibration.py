@@ -262,10 +262,10 @@ def merge_calibrated_logs(input_dir, output_filepath):
     print(f"Úspěšně spojeno {len(log_files)} souborů do: {output_filepath}")
     print(f"Celkový počet řádků: {len(final_df)}")
 
-# --- POUŽITÍ ---
-# input_folder = 'Model_lib_and_sim/Identification/Calibrated'
-# output_file = 'Model_lib_and_sim/Identification/combined_calibrated_logs.csv'
-# merge_calibrated_logs(input_folder, output_file)
+    # --- POUŽITÍ ---
+    # input_folder = 'Model_lib_and_sim/Identification/Calibrated'
+    # output_file = 'Model_lib_and_sim/Identification/combined_calibrated_logs.csv'
+    # merge_calibrated_logs(input_folder, output_file)
 
 def piecewise_3_segments_horizontal(x, k1, k3, xb1, xb2, y_offset):
     """
@@ -282,12 +282,12 @@ def piecewise_3_segments_horizontal(x, k1, k3, xb1, xb2, y_offset):
     ]
     return np.piecewise(x, condlist, funclist)
 
-def main():
-    search_pattern = os.path.join(repo_root, '**', 'rst_*_log_*.csv')
+def main(log_path: str = '**'):
+    search_pattern = os.path.join(repo_root, 'log_files', log_path, 'rst_*_log_*.csv')
     log_files = glob.glob(search_pattern, recursive=True)
     
     if not log_files:
-        search_pattern = os.path.join(repo_root, '**', 'rst*.csv')
+        search_pattern = os.path.join(repo_root, 'log_files', log_path, 'rst*.csv')
         log_files = glob.glob(search_pattern, recursive=True)
 
     if not log_files:
@@ -434,15 +434,15 @@ def main():
     plt.legend(loc='lower right')
     plt.tight_layout()
     
-    plot_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'steering_calibration_result_deadzone.png')
+    plot_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'sc_after_calibration.png')
     plt.savefig(plot_path, dpi=300)
     print(f"\nGraf uložen do: {plot_path}")
 
 if __name__ == '__main__':
-    # main()
+    main('18.10.2026') # arg left empty means all log files scanned
     # file_path = os.path.join(repo_root, 'log_files', '18.10.2026', 'rst_20_log_1792330050.csv')
     # calibrate_log(file_path)
     # calibrate_all_logs()
-    input_dir_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'Calibrated')
-    merged_file_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'Calibrated', 'combined_calibrated_logs.csv')
-    merge_calibrated_logs(input_dir_path, merged_file_path)
+    # input_dir_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'Calibrated')
+    # merged_file_path = os.path.join(repo_root, 'Model_lib_and_sim', 'Identification', 'Calibrated', 'combined_calibrated_logs.csv')
+    # merge_calibrated_logs(input_dir_path, merged_file_path)

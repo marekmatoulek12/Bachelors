@@ -20,7 +20,6 @@ class VehicleParams:
     rear_track_width: float = 0.16
     cg_height: float = 0.05  # Výška těžiště
 
-
 class BaseIdentification:
     """Základní třída zajišťující načtení a přípravu (filtraci) dat."""
     

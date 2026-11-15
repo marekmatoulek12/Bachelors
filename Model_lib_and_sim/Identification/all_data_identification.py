@@ -31,12 +31,25 @@ class BaseIdentification:
         self.timestamp = data["timestamp"].to_numpy()
         self.cmd_rpm = data["cmd_rpm"].to_numpy()
 
+        is_in_rad = True
+
         if "real_steer_rad" in data.columns:
             steer_column = "real_steer_rad"
-        else:
+            print("Artificially calibrated log")
+
+        elif "cmd_steer_rad" in data.columns:
             steer_column = "cmd_steer_rad"
+            print("Uncalibrated log")
+
+        else:
+            steer_column = "cmd_steer_deg"
+            is_in_rad = False
+            print("Calibrated IRL log")
 
         self.cmd_steer_rad = data[steer_column].to_numpy()
+        if not is_in_rad:
+            self.cmd_steer_rad = np.deg2rad(self.cmd_steer_rad)
+
         self.gps_x = data["gps_x"].to_numpy()
         self.gps_y = data["gps_y"].to_numpy()
         self.gps_yaw = data["gps_yaw"].to_numpy()
@@ -191,13 +204,48 @@ class DualTrackIdentification(BaseIdentification):
         self.Fx_rl_koeff = self.Fx_rl / self.Fz_rl
         self.Fx_rr_koeff = self.Fx_rr / self.Fz_rr
 
-
 class IdentificationOrchestrator:
     def __init__(self, target_dir: Path):
         self.target_dir = target_dir
         self.all_st_data = []
         self.all_dt_data = []
         self.all_raw_objects = []
+
+    @staticmethod
+    def _parse_log_params(filename: str) -> dict[str, float]:
+        """Extrahuje parametry testu z názvu souboru (podporuje csst_ i starší rst_)."""
+        def parse_val(token: str) -> float:
+            return float(token.replace('_', '-'))
+
+        # Nový formát: csst_<target_steer>_<steering_rate>_<starting_velocity>_<acceleration>
+        csst_match = re.search(
+            r'csst_([-_]?\d+)_([-_]?\d+)_([-_]?\d+)_([-_]?\d+)',
+            filename,
+        )
+        if csst_match:
+            return {
+                'target_steer_deg': parse_val(csst_match.group(1)),
+                'steering_rate': parse_val(csst_match.group(2)),
+                'starting_velocity': parse_val(csst_match.group(3)),
+                'acceleration': parse_val(csst_match.group(4)),
+            }
+
+        # Zpětná kompatibilita pro starší logy: rst_<target_steer>_<acceleration>
+        rst_match = re.search(r'rst_([-_]?\d+)(?:_([-_]?\d+))?', filename)
+        if rst_match:
+            return {
+                'target_steer_deg': parse_val(rst_match.group(1)),
+                'steering_rate': 0.0,
+                'starting_velocity': 0.0,
+                'acceleration': parse_val(rst_match.group(2)) if rst_match.group(2) else 0.0,
+            }
+
+        return {
+            'target_steer_deg': 0.0,
+            'steering_rate': 0.0,
+            'starting_velocity': 0.0,
+            'acceleration': 0.0,
+        }
 
     def load_and_process_logs(self):
         search_pattern = str(self.target_dir / 'calibrated_*.csv')
@@ -211,12 +259,13 @@ class IdentificationOrchestrator:
 
         for file in log_files:
             try:
-                match = re.search(r'rst_([-_]?\d+)', file)
-                if match:
-                    angle_str = match.group(1).replace('_', '-')
-                    cmd_angle = float(angle_str)
-                else:
-                    cmd_angle = 0.0
+                params = self._parse_log_params(Path(file).name)
+                
+                # Jednotlivé proměnné pro přímé použití
+                target_steer_deg = params['target_steer_deg']
+                steering_rate = params['steering_rate']
+                starting_velocity = params['starting_velocity']
+                acceleration = params['acceleration']
 
                 df = pd.read_csv(file)
                 if len(df) < 50:
@@ -228,17 +277,18 @@ class IdentificationOrchestrator:
                 st_handler.slip_variables_calculation()
                 st_handler.wheel_forces_calculation()
                 
-                # Ulozeni celeho objektu pro pripadne hromadne raw vykreslovani
-                self.all_raw_objects.append((cmd_angle, st_handler))
+                # Uložení celého slovníku parametrů místo samotného úhlu
+                self.all_raw_objects.append((params, st_handler))
                 
                 st_log_data = {
-                    'cmd_angle': cmd_angle,
+                    'cmd_angle': target_steer_deg,  # zachováno kvůli kompatibilitě se stávajícími grafy
+                    **params,
                     'alpha_f': st_handler.alpha_f,
                     'Fyf_koeff': st_handler.Fyf_koeff,
                     'alpha_r': st_handler.alpha_r,
                     'Fyr_koeff': st_handler.Fyr_koeff,
                     'lamda_r': st_handler.lamda_r,
-                    'Fxr_koeff': st_handler.Fxr_koeff
+                    'Fxr_koeff': st_handler.Fxr_koeff,
                 }
                 self.all_st_data.append(st_log_data)
                 
@@ -249,7 +299,8 @@ class IdentificationOrchestrator:
                 dt_handler.wheel_forces_calculation()
                 
                 dt_log_data = {
-                    'cmd_angle': cmd_angle,
+                    'cmd_angle': target_steer_deg,
+                    **params,
                     'alpha_f': dt_handler.alpha_f,
                     'Fyf_koeff': dt_handler.Fyf_koeff,
                     'alpha_r': dt_handler.alpha_r,
@@ -258,61 +309,66 @@ class IdentificationOrchestrator:
                     'lamda_rl': dt_handler.lamda_rl,
                     'lamda_rr': dt_handler.lamda_rr,
                     'Fx_rl_koeff': dt_handler.Fx_rl_koeff,
-                    'Fx_rr_koeff': dt_handler.Fx_rr_koeff
+                    'Fx_rr_koeff': dt_handler.Fx_rr_koeff,
                 }
                 self.all_dt_data.append(dt_log_data)
                 
             except Exception as e:
                 print(f"Chyba při zpracování {file}: {e}")
 
-    def _get_color_map_info(self):
-        all_angles = [abs(data['cmd_angle']) for data in self.all_st_data]
-        min_angle, max_angle = (min(all_angles), max(all_angles)) if all_angles else (0, 20)
+    def _get_color_map_info(self, color_key: str = "target_steer_deg", use_abs: bool = True):
+        transform = abs if use_abs else (lambda x: x)
+        values = [transform(data[color_key]) for data in self.all_st_data if color_key in data]
+        min_val, max_val = (min(values), max(values)) if values else (0.0, 20.0)
         cmap = plt.get_cmap('viridis')
-        
-        def get_color(angle):
-            if max_angle == min_angle:
+
+        def get_color(val: float):
+            v = transform(val)
+            if max_val == min_val:
                 norm_val = 0.5
             else:
-                norm_val = (abs(angle) - min_angle) / (max_angle - min_angle)
+                norm_val = (v - min_val) / (max_val - min_val)
             return cmap(norm_val)
-            
-        return cmap, min_angle, max_angle, get_color
 
-    def plot_aggregated_raw_data(self, arrow_step=2):
+        return cmap, min_val, max_val, get_color
+
+    def plot_aggregated_raw_data(
+        self,
+        arrow_step: int = 2,
+        color_key: str = "target_steer_deg",
+        use_abs: bool = True,
+    ):
         if not self.all_raw_objects:
             print("Žádná RAW data k vykreslení.")
             return
+
+        labels = {
+            "target_steer_deg": "Cílový úhel řízení [°]",
+            "steering_rate": "Rychlost natáčení [°/s]",
+            "starting_velocity": "Počáteční rychlost [m/s]",
+            "acceleration": "Zrychlení [m/s²]",
+        }
+        prefix = "Absolutní: " if use_abs else ""
+        cbar_label = f"{prefix}{labels.get(color_key, color_key)}"
+
+        cmap, min_val, max_val, get_color = self._get_color_map_info(
+            color_key=color_key, use_abs=use_abs
+        )
 
         # --- 1. Graf naměřených vs filtrovaných hodnot (bez přejezdových čar) ---
         fig, axes = plt.subplots(6, 1, sharex=True, figsize=(12, 14))
         (yaw_rate_ax, yaw_rate_acc_ax, accel_x_ax, accel_y_ax, vx_ax, vy_ax) = axes
         fig.suptitle("Agregovaná Raw vs Filtered Data", fontsize=14)
-        
-        cmap, min_angle, max_angle, get_color = self._get_color_map_info()
 
-        for cmd_angle, handler in self.all_raw_objects:
+        for params, handler in self.all_raw_objects:
             time = handler.timestamp - handler.timestamp[0]
-            c = get_color(cmd_angle)
-            
-            # Vykreslujeme jako scatter (body), abychom se vyhli "přejezdovým čarám"
-            # Parametr s=1 velikost bodu, pro raw menší alfa.
-            yaw_rate_ax.scatter(time, handler.yaw_rate, s=1, alpha=0.3, color=c)
+            c = get_color(params[color_key])
+
             yaw_rate_ax.scatter(time, handler.yaw_rate_filtered, s=1, color=c)
-
-            yaw_rate_acc_ax.scatter(time, handler.yaw_accel, s=1, alpha=0.3, color=c)
             yaw_rate_acc_ax.scatter(time, handler.yaw_accel_filtered, s=1, color=c)
-
-            accel_x_ax.scatter(time, handler.accel_x, s=1, alpha=0.3, color=c)
             accel_x_ax.scatter(time, handler.accel_x_filtered, s=1, color=c)
-
-            accel_y_ax.scatter(time, handler.accel_y, s=1, alpha=0.3, color=c)
             accel_y_ax.scatter(time, handler.accel_y_filtered, s=1, color=c)
-
-            vx_ax.scatter(time, handler.vx, s=1, alpha=0.3, color=c)
             vx_ax.scatter(time, handler.vx_filtered, s=1, color=c)
-
-            vy_ax.scatter(time, handler.vy, s=1, alpha=0.3, color=c)
             vy_ax.scatter(time, handler.vy_filtered, s=1, color=c)
 
         yaw_rate_ax.set_ylabel("Yaw rate")
@@ -329,10 +385,10 @@ class IdentificationOrchestrator:
         vy_ax.set_xlabel("Time [s]")
         vy_ax.grid(True)
 
-        sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min_angle, vmax=max_angle))
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min_val, vmax=max_val))
         sm.set_array([])
         cbar = fig.colorbar(sm, ax=axes, shrink=0.8, pad=0.02)
-        cbar.set_label("Absolutní povel řízení [°]")
+        cbar.set_label(f"Parametr: {color_key}")
 
         fig.tight_layout()
 
@@ -340,10 +396,9 @@ class IdentificationOrchestrator:
         fig_gps, gps_ax = plt.subplots(figsize=(10, 8))
         fig_gps.suptitle("Agregovaná GPS Trajectory and Heading", fontsize=14)
 
-        for cmd_angle, handler in self.all_raw_objects:
-            c = get_color(cmd_angle)
-            
-            # Trajektorii nechame jako scatter, aby se to neresilo spojovanim nesouvisejicich bodu
+        for params, handler in self.all_raw_objects:
+            c = get_color(params[color_key])
+
             gps_ax.scatter(handler.gps_x, handler.gps_y, s=2, color=c, alpha=0.5)
 
             indices = np.arange(0, len(handler.gps_yaw), arrow_step)
@@ -356,17 +411,17 @@ class IdentificationOrchestrator:
                 scale=30,
                 width=0.0035,
                 zorder=5,
-                alpha=0.6
+                alpha=0.6,
             )
-            
+
         gps_ax.set_xlabel("x [m]")
         gps_ax.set_ylabel("y [m]")
         gps_ax.grid(True)
         gps_ax.axis("equal")
-        
+
         cbar_gps = fig_gps.colorbar(sm, ax=gps_ax)
-        cbar_gps.set_label("Absolutní povel řízení [°]")
-        
+        cbar_gps.set_label(f"Parametr: {color_key}")
+
         fig_gps.tight_layout()
 
     def plot_aggregated_st_models(self):
@@ -541,7 +596,6 @@ class IdentificationOrchestrator:
         cbar.set_label("Absolutní povel řízení [°]")
 
         fig.subplots_adjust(wspace=0.2, hspace=0.2)
-
 
 def main(target: Path = ""):
     if target == "":

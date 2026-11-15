@@ -6,13 +6,15 @@ from rclpy.signals import SignalHandlerOptions
 
 from .Blueprints import LoggingConnectionBP, PIDController, PIDGains
 
+
 class InitTest(LoggingConnectionBP):
     def __init__(self, node_name: str = "init_test", test_length: float = 20.0, timer_period: float = 0.1):
-        super().__init__(node_name=node_name,
-                         control_loop=self.control_loop,
-                         timer_period=timer_period,
-                         use_fw_encoders= False
-                         )
+        super().__init__(
+            node_name=node_name,
+            control_loop=self.control_loop,
+            timer_period=timer_period,
+            use_fw_encoders=False,
+        )
         self.test_length = test_length
         self.timer_period = timer_period
 
@@ -22,114 +24,116 @@ class InitTest(LoggingConnectionBP):
         current_time = self.get_clock().now().nanoseconds / 1e9
         elapsed_time = current_time - self.start_time
         rpm_req = 0.0
-        steering_angle_req = 0.0
+        steering_angle_req_deg = 0.0
 
         if elapsed_time >= self.test_length:
             self.get_logger().info("Test length exceeded. Stopping test.")
             return False
 
-
-
-        # Logovani pozadavku
-        self.log_commands(rpm_req, steering_angle_req)
+        # Logovani pozadavku (rizeni ve stupnich)
+        self.log_commands(rpm_req, steering_angle_req_deg)
 
         # Publikovani pozadavku
-        self.publish_data(rpm_req, steering_angle_req)
+        self.publish_data()
 
         # Logovani do CSV
         self.log_data()
 
         return True
 
+
 class SineWaveTest(LoggingConnectionBP):
-    def __init__(self, node_name: str = "sine_wave_test", target_speed_m_s: float = 1.0, sine_freq: float = 1.0, sine_ampl: float = 1.0, test_length: float = 20.0, timer_period: float = 0.1):
-        super().__init__(node_name=node_name,
-                         control_loop=self.control_loop,
-                         timer_period=timer_period
-                         )
+    def __init__(
+        self,
+        node_name: str = "sine_wave_test",
+        target_speed_m_s: float = 1.0,
+        sine_freq: float = 1.0,
+        sine_ampl_deg: float = 5.0,
+        test_length: float = 20.0,
+        timer_period: float = 0.1,
+    ):
+        super().__init__(
+            node_name=node_name,
+            control_loop=self.control_loop,
+            timer_period=timer_period,
+        )
         self.target_speed_m_s = target_speed_m_s  # m/s
-        self.sine_freq = sine_freq
-        self.sine_ampl = sine_ampl
-        self.timer_period = timer_period          # seconds
-        self.test_length = test_length      # seconds
-    
-    
-        ## ROOM FOR IMPROVEMENT -- KONSTANTY NATRELENY Z PRDELE
+        self.sine_freq = sine_freq                # rad/s
+        self.sine_ampl_deg = sine_ampl_deg        # deg
+        self.timer_period = timer_period          # s
+        self.test_length = test_length            # s
+
         self.speed2rpm_controller = PIDController(
             gains=PIDGains(kp=0, ki=0.1, kd=0),
             output_limit=(-200, 200),
             integrator_limit=(-200, 200),
         )
-    
+
         self.start_time = self.get_clock().now().nanoseconds / 1e9
         self.test_phase = 1
         self.ph_1_end_time = 0.0
-    
+
     def control_loop(self):
         current_time = self.get_clock().now().nanoseconds / 1e9
         elapsed_time = current_time - self.start_time
         rpm_req = 0.0
-        steering_angle_req = 0.0
-        
+        steering_angle_req_deg = 0.0
+
         if elapsed_time >= self.test_length:
             self.get_logger().info("Test length exceeded. Stopping test.")
             return False
-    
+
         if self.all_data_available():
             match self.test_phase:
-    
                 case 1:
                     # Faze 1: Zrychleni na cilovou rychlost
                     rpm_ff = self.vx2rpm(self.target_speed_m_s)
-                    rpm_fb = self.speed2rpm_controller.step(self.target_speed_m_s - self.vx, self.timer_period) # type: ignore
+                    rpm_fb = self.speed2rpm_controller.step(self.target_speed_m_s - self.vx, self.timer_period)  # type: ignore
                     rpm_req = rpm_ff + rpm_fb
-                    steering_angle_req = 0.0
-    
+                    steering_angle_req_deg = 0.0
+
                     self.get_logger().info(f"Zrychluji... Aktualni rychlost: {self.vx:.2f} m/s")
-                    if self.vx > self.target_speed_m_s * 0.95: # type: ignore
-                        self.get_logger().info(f"Dosazena dostatecna rychlost {self.vx} :: FAZE 2")
+                    if self.vx > self.target_speed_m_s * 0.95:  # type: ignore
+                        self.get_logger().info(f"Dosazena dostatecna rychlost {self.vx:.2f} :: FAZE 2")
                         self.test_phase = 2
                         self.ph_1_end_time = current_time
-    
+
                 case 2:
-                    # Faze 2: Pokud jsme zhruba dosahli cilove rychlosti, zacneme pomalu zvetsovat uhel zatoceni
+                    # Faze 2: Sinusove rizeni pri udrzovani cilove rychlosti
                     time_from_ph_1 = current_time - self.ph_1_end_time
-    
+
                     rpm_ff = self.vx2rpm(self.target_speed_m_s)
-                    rpm_fb = self.speed2rpm_controller.step(self.target_speed_m_s - self.vx, self.timer_period) # type: ignore
+                    rpm_fb = self.speed2rpm_controller.step(self.target_speed_m_s - self.vx, self.timer_period)  # type: ignore
                     rpm_req = rpm_ff + rpm_fb
-                    steering_angle_req = self.sine_ampl * np.sin(self.sine_freq * time_from_ph_1) 
-                    self.get_logger().info(f"Zatacim: {steering_angle_req:.2f} deg")
-    
-            # Logovani pozadavku
-            self.log_commands(rpm_req, steering_angle_req)
-    
-            # Publikovani pozadavku
-            self.publish_data(rpm_req, steering_angle_req)
-    
-            # Logovani do CSV
+                    steering_angle_req_deg = self.sine_ampl_deg * np.sin(self.sine_freq * time_from_ph_1)
+                    self.get_logger().info(f"Zatacim: {steering_angle_req_deg:.2f} deg")
+
+            self.log_commands(rpm_req, steering_angle_req_deg)
+            self.publish_data()
             self.log_data()
-    
+
         return True
-    
-        # ROS2 logovani
-        # otevrit v druhem terminalu:
-        # ros2 bag record -o muj_rampsteer_bag /state/odometry /servo/front/angle_req /powertrain/rl/rpm_req /powertrain/rr/rpm_req
 
 
 class RampSteerTest(LoggingConnectionBP):
-    def __init__(self, node_name: str = "ramp_steer_test", target_speed_m_s: float = 10.0, steering_angle_rate_deg_s: float = 1.0, test_length: float = 20.0, timer_period: float = 0.1):
-        super().__init__(node_name=node_name,
-                         control_loop=self.control_loop,
-                         timer_period=timer_period
-                         )
-        self.target_speed_m_s = target_speed_m_s  # m/s
-        self.steer_rate_deg_s = steering_angle_rate_deg_s    # degrees per second
-        self.timer_period = timer_period          # seconds
-        self.test_length = test_length      # seconds
+    def __init__(
+        self,
+        node_name: str = "ramp_steer_test",
+        target_speed_m_s: float = 10.0,
+        steering_angle_rate_deg_s: float = 1.0,
+        test_length: float = 20.0,
+        timer_period: float = 0.1,
+    ):
+        super().__init__(
+            node_name=node_name,
+            control_loop=self.control_loop,
+            timer_period=timer_period,
+        )
+        self.target_speed_m_s = target_speed_m_s          # m/s
+        self.steer_rate_deg_s = steering_angle_rate_deg_s # deg/s
+        self.timer_period = timer_period                  # s
+        self.test_length = test_length                    # s
 
-
-        ## ROOM FOR IMPROVEMENT -- KONSTANTY NATRELENY Z PRDELE
         self.speed2rpm_controller = PIDController(
             gains=PIDGains(kp=0, ki=0.1, kd=0),
             output_limit=(-200, 200),
@@ -144,9 +148,7 @@ class RampSteerTest(LoggingConnectionBP):
         current_time = self.get_clock().now().nanoseconds / 1e9
         elapsed_time = current_time - self.start_time
         rpm_req = 0.0
-        steering_angle_req = 0.0
-
-        steer_rate_rad_s = self.deg2rad(self.steer_rate_deg_s)
+        steering_angle_req_deg = 0.0
 
         if elapsed_time >= self.test_length:
             self.get_logger().info("Test length exceeded. Stopping test.")
@@ -154,57 +156,57 @@ class RampSteerTest(LoggingConnectionBP):
 
         if self.all_data_available():
             match self.test_phase:
-
                 case 1:
                     # Faze 1: Zrychleni na cilovou rychlost
                     rpm_ff = self.vx2rpm(self.target_speed_m_s)
-                    rpm_fb = self.speed2rpm_controller.step(self.target_speed_m_s - self.vx, self.timer_period) # type: ignore
+                    rpm_fb = self.speed2rpm_controller.step(self.target_speed_m_s - self.vx, self.timer_period)  # type: ignore
                     rpm_req = rpm_ff + rpm_fb
-                    steering_angle_req = 0.0
+                    steering_angle_req_deg = 0.0
 
                     self.get_logger().info(f"Zrychluji... Aktualni rychlost: {self.vx:.2f} m/s")
-                    if self.vx > self.target_speed_m_s * 0.95: # type: ignore
-                        self.get_logger().info(f"Dosazena dostatecna rychlost {self.vx} :: FAZE 2")
+                    if self.vx > self.target_speed_m_s * 0.95:  # type: ignore
+                        self.get_logger().info(f"Dosazena dostatecna rychlost {self.vx:.2f} :: FAZE 2")
                         self.test_phase = 2
                         self.ph_1_end_time = current_time
 
                 case 2:
-                    # Faze 2: Pokud jsme zhruba dosahli cilove rychlosti, zacneme pomalu zvetsovat uhel zatoceni
+                    # Faze 2: Plynule zvetsovani uhlu zatoceni ve stupnich
                     time_from_ph_1 = current_time - self.ph_1_end_time
 
                     rpm_ff = self.vx2rpm(self.target_speed_m_s)
-                    rpm_fb = self.speed2rpm_controller.step(self.target_speed_m_s - self.vx, self.timer_period) # type: ignore
+                    rpm_fb = self.speed2rpm_controller.step(self.target_speed_m_s - self.vx, self.timer_period)  # type: ignore
                     rpm_req = rpm_ff + rpm_fb
-                    steering_angle_req = steer_rate_rad_s * time_from_ph_1
-                    self.get_logger().info(f"Zatacim: {steering_angle_req:.2f} deg")
+                    steering_angle_req_deg = self.steer_rate_deg_s * time_from_ph_1
+                    self.get_logger().info(f"Zatacim: {steering_angle_req_deg:.2f} deg")
 
-            # Logovani pozadavku
-            self.log_commands(rpm_req, steering_angle_req)
-
-            # Publikovani pozadavku
-            self.publish_data(rpm_req, steering_angle_req)
-            
-            # Logovani do CSV
+            self.log_commands(rpm_req, steering_angle_req_deg)
+            self.publish_data()
             self.log_data()
 
         return True
-    
-        # ROS2 logovani
-        # otevrit v druhem terminalu:
-        # ros2 bag record -o muj_rampsteer_bag /state/odometry /servo/front/angle_req /powertrain/rl/rpm_req /powertrain/rr/rpm_req
+
 
 class RampSpeedTest(LoggingConnectionBP):
-    def __init__(self, node_name: str = 'ramp_speed_test', start_speed_m_s: float = 10.0, target_steer_deg: float = 5.0, acceleration_m_ss: float = 1.0, test_length: float = 20.0, timer_period: float = 0.1):
-        super().__init__(node_name=node_name,
-                         control_loop=self.control_loop,
-                         timer_period=timer_period
-                         )
-        
+    def __init__(
+        self,
+        node_name: str = "ramp_speed_test",
+        start_speed_m_s: float = 10.0,
+        target_steer_deg: float = 5.0,
+        acceleration_m_ss: float = 1.0,
+        test_length: float = 20.0,
+        timer_period: float = 0.1,
+    ):
+        super().__init__(
+            node_name=node_name,
+            control_loop=self.control_loop,
+            timer_period=timer_period,
+        )
+
         self.start_speed = start_speed_m_s
         self.target_steer_deg = target_steer_deg
         self.acceleration = acceleration_m_ss
-        self.timer_period = timer_period          # seconds
-        self.test_length = test_length      # seconds
+        self.timer_period = timer_period  # s
+        self.test_length = test_length    # s
 
         self.speed2rpm_controller = PIDController(
             gains=PIDGains(kp=70, ki=150, kd=0),
@@ -216,142 +218,191 @@ class RampSpeedTest(LoggingConnectionBP):
         self.test_phase = 1
         self.ph_1_end_time = 0.0
         self.ph_2_end_time = 0.0
-        self.ph_3_end_time = 0.0
 
     def control_loop(self):
         current_time = self.get_clock().now().nanoseconds / 1e9
         elapsed_time = current_time - self.start_time
         rpm_req = 0.0
-        steering_angle_req = 0.0
+        steering_angle_req_deg = 0.0
 
-
-        if elapsed_time >= self.test_length:  # Test length in seconds
+        if elapsed_time >= self.test_length:
             self.get_logger().info("Test length exceeded. Stopping test.")
-            return False    
+            return False
 
         if self.all_data_available():
             match self.test_phase:
-
                 case 1:
-                    # Faze 1: Zrychleni na cilovou rychlost 
+                    # Faze 1: Zrychleni na cilovou rychlost
                     tar_sp = self.start_speed
                     rpm_ff = self.vx2rpm(tar_sp)
-                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period) # type: ignore
-                    self.get_logger().info(f"Error 1: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {(rpm_fb):.2f}")
+                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
+                    self.get_logger().info(f"Error 1: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
                     rpm_req = rpm_ff + rpm_fb
-                    steering_angle_req = 0.0
+                    steering_angle_req_deg = 0.0
 
-                    if self.vx >= self.start_speed * 0.95: # type: ignore
+                    if self.vx >= self.start_speed * 0.95:  # type: ignore
                         self.test_phase = 2
                         self.ph_1_end_time = current_time
 
                 case 2:
-                    # Faze 2: Drzet cilovou rychlost a zatocit na pozadovany uhel
-                    phase_2_duration = 1 # jak rychle ma auto skubnout koly
+                    # Faze 2: Drzet cilovou rychlost a zatocit na pozadovany uhel (ve stupnich)
+                    phase_2_duration = 1.0
                     tar_sp = self.start_speed
                     rpm_ff = self.vx2rpm(tar_sp)
-                    rpm_fb = self.speed2rpm_controller.step(self.start_speed - self.vx, self.timer_period) # type: ignore
-                    self.get_logger().info(f"Error 2: {(self.start_speed - self.vx):.2f} m/s -- rpm fb: {(rpm_fb):.2f}")
+                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
+                    self.get_logger().info(f"Error 2: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
                     rpm_req = rpm_ff + rpm_fb
-                    time_from_ph_1 = current_time - self.ph_1_end_time
-                    steering_angle_req = self.deg2rad(self.target_steer_deg) * (time_from_ph_1 / phase_2_duration)
 
-                    if time_from_ph_1 > phase_2_duration:
+                    time_from_ph_1 = current_time - self.ph_1_end_time
+                    steering_angle_req_deg = self.target_steer_deg * min(time_from_ph_1 / phase_2_duration, 1.0)
+
+                    if time_from_ph_1 >= phase_2_duration:
                         self.test_phase = 3
                         self.ph_2_end_time = current_time
 
                 case 3:
-                    # Faze 3: Zacit pomale zrychlovat pri zachovani steering angle
+                    # Faze 3: Plynule zrychlovat pri zachovani uhlu rizeni
                     time_from_ph_2 = current_time - self.ph_2_end_time
                     tar_sp = self.start_speed + self.acceleration * time_from_ph_2
                     rpm_ff = self.vx2rpm(tar_sp)
-                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period) # type: ignore
-                    self.get_logger().info(f"Error 3: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {(rpm_fb):.2f}")
+                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
+                    self.get_logger().info(f"Error 3: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
                     rpm_req = rpm_ff + rpm_fb
-                    steering_angle_req = self.deg2rad(self.target_steer_deg)
+                    steering_angle_req_deg = self.target_steer_deg
 
-            # Logovani pozadavku
-            self.log_commands(rpm_req, steering_angle_req)
-
-            # Publikovani pozadavku
+            self.log_commands(rpm_req, steering_angle_req_deg)
             self.publish_data()
-            
+            self.log_data()
+
+        return True
+
+
+class CombinedSteerSpeedTest(LoggingConnectionBP):
+    """Kombinovaný test (RampSteer + RampSpeed):
+    1. Dosáhne počáteční rychlosti (starting_velocity)
+    2. Natočí kola na výchozí úhel (target_steer_deg)
+    3. Současně mění rychlost (acceleration_m_ss) i úhel řízení (steering_rate [deg/s])
+    """
+
+    def __init__(
+        self,
+        node_name: str = "combined_steer_speed_test",
+        starting_velocity: float = 1.0,
+        target_steer_deg: float = 0.0,
+        steering_rate: float = 5.0,
+        acceleration_m_ss: float = 1.0,
+        test_length: float = 20.0,
+        timer_period: float = 0.01,
+    ):
+        super().__init__(
+            node_name=node_name,
+            control_loop=self.control_loop,
+            timer_period=timer_period,
+        )
+
+        self.starting_velocity = starting_velocity  # m/s
+        self.target_steer_deg = target_steer_deg    # deg (výchozí úhel před rampou)
+        self.steering_rate = steering_rate          # deg/s (kladné = doleva, záporné = doprava)
+        self.acceleration = acceleration_m_ss       # m/s^2
+        self.timer_period = timer_period            # s
+        self.test_length = test_length              # s
+
+        self.speed2rpm_controller = PIDController(
+            gains=PIDGains(kp=70, ki=150, kd=0),
+            output_limit=(-200, 200),
+            integrator_limit=(-200, 200),
+        )
+
+        self.start_time = self.get_clock().now().nanoseconds / 1e9
+        self.test_phase = 1
+        self.ph_1_end_time = 0.0
+        self.ph_2_end_time = 0.0
+
+    def control_loop(self):
+        current_time = self.get_clock().now().nanoseconds / 1e9
+        elapsed_time = current_time - self.start_time
+        rpm_req = 0.0
+        steering_angle_req_deg = 0.0
+
+        if elapsed_time >= self.test_length:
+            self.get_logger().info("Test length exceeded. Stopping test.")
+            return False
+
+        if self.all_data_available():
+            match self.test_phase:
+                case 1:
+                    # Faze 1: Zrychleni na pocatecni rychlost
+                    tar_sp = self.starting_velocity
+                    rpm_ff = self.vx2rpm(tar_sp)
+                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
+                    rpm_req = rpm_ff + rpm_fb
+                    steering_angle_req_deg = 0.0
+
+                    self.get_logger().info(
+                        f"Faze 1 | v: {self.vx:.2f}/{tar_sp:.2f} m/s | steer: {steering_angle_req_deg:.2f} deg"
+                    )
+
+                    if self.starting_velocity <= 0.0 or self.vx >= self.starting_velocity * 0.95:  # type: ignore
+                        self.test_phase = 2
+                        self.ph_1_end_time = current_time
+
+                case 2:
+                    # Faze 2: Udrzet pocatecni rychlost a nastavit vychozi uhel zatoceni
+                    phase_2_duration = 1.0
+                    tar_sp = self.starting_velocity
+                    rpm_ff = self.vx2rpm(tar_sp)
+                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
+                    rpm_req = rpm_ff + rpm_fb
+
+                    if abs(self.target_steer_deg) < 1e-6:
+                        steering_angle_req_deg = 0.0
+                        self.test_phase = 3
+                        self.ph_2_end_time = current_time
+                    else:
+                        time_from_ph_1 = current_time - self.ph_1_end_time
+                        steering_angle_req_deg = self.target_steer_deg * min(
+                            time_from_ph_1 / phase_2_duration, 1.0
+                        )
+                        self.get_logger().info(
+                            f"Faze 2 | v: {self.vx:.2f} m/s | steer: {steering_angle_req_deg:.2f}/{self.target_steer_deg:.2f} deg"
+                        )
+                        if time_from_ph_1 >= phase_2_duration:
+                            self.test_phase = 3
+                            self.ph_2_end_time = current_time
+
+                case 3:
+                    # Faze 3: Soucasna zmena rychlosti i uhlu zatoceni
+                    time_from_ph_2 = current_time - self.ph_2_end_time
+                    tar_sp = self.starting_velocity + self.acceleration * time_from_ph_2
+                    steering_angle_req_deg = self.target_steer_deg + self.steering_rate * time_from_ph_2
+
+                    rpm_ff = self.vx2rpm(tar_sp)
+                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
+                    rpm_req = rpm_ff + rpm_fb
+
+                    self.get_logger().info(
+                        f"Faze 3 | tar_v: {tar_sp:.2f} (act: {self.vx:.2f}) m/s | steer: {steering_angle_req_deg:.2f} deg"
+                    )
+
+            # Logovani pozadavku (steering ve stupnich)
+            self.log_commands(rpm_req, steering_angle_req_deg)
+
+            # Publikovani pozadavku (prepocet na radiany resi Blueprints)
+            self.publish_data()
+
             # Logovani do CSV
             self.log_data()
 
         return True
 
-class CombinedStressTest:
-    """Orchestrátor pro zmapování kombinovaného skluzu.
-    Spouští sekvenčně sérii RampSpeedTestů s rostoucím úhlem natočení.
-    """
-    def __init__(self, 
-                 start_speed_m_s: float = 3.0, 
-                 max_steer_deg: float = 20.0, 
-                 num_branches: int = 4, 
-                 acceleration_m_ss: float = 5.0, 
-                 branch_test_length: float = 12.0, 
-                 timer_period: float = 0.1):
-        
-        self.start_speed_m_s = start_speed_m_s
-        self.acceleration_m_ss = acceleration_m_ss
-        self.branch_test_length = branch_test_length
-        self.timer_period = timer_period
-        
-        # Vygenerování úhlů, např. pro max=20 a num=4 vygeneruje [5.0, 10.0, 15.0, 20.0]
-        self.steer_angles = np.linspace(
-            max_steer_deg / num_branches, 
-            max_steer_deg, 
-            num_branches
-        )
-
-    def run(self):
-        for i, steer_deg in enumerate(self.steer_angles):
-            print(f"\n=======================================================")
-            print(f"--- Spouštím RampSpeedTest {i+1}/{len(self.steer_angles)} (Úhel: {steer_deg:.1f}°) ---")
-            print(f"=======================================================\n")
-            
-            # 1. Inicializace nového ROS uzlu pro konkrétní větev (vytvoří si vlastní CSV soubor)
-            name = str(f"ramp_speed_test_{int(steer_deg)}")
-            node = RampSpeedTest(
-                node_name=name,
-                start_speed_m_s=self.start_speed_m_s,
-                target_steer_deg=steer_deg,
-                acceleration_m_ss=self.acceleration_m_ss,
-                test_length=self.branch_test_length,
-                timer_period=self.timer_period
-            )
-            
-            # 2. Běh smyčky pro daný uzel
-            try:
-                while rclpy.ok() and not node.should_stop:
-                    rclpy.spin_once(node, timeout_sec=self.timer_period)
-            except KeyboardInterrupt:
-                if node is not None:
-                    node.destroy_blueprint_node()
-                return
-            finally:
-                if node is not None:
-                    try:
-                        node.destroy_blueprint_node()
-                    except Exception:
-                        pass
-            
-            # 3. Pauza pro reset dynamiky auta (zastavení) a logů
-            if i < len(self.steer_angles) - 1:
-                input(f"Test {i+1} dokončen. Srovnejte auto a stiskněte [ENTER] pro další test...")
-
-        print("\n*** Všechny větve CombinedStressTestu úspěšně dokončeny! ***")
 
 def main(args=None):
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
-    
-    # multiline (un)comment -> Ctrl + /
+
+    def sgn_str(x: float) -> str:
+        return "" if x >= 0 else "_"
 
     """ INIT TEST SETUP """
-    """
-    - overit, ze vse funguje, ze jsou vsechna data logovana a nic nepada
-    """
     # test_length = 20.0  # seconds
     # timer_period = 0.05  # 20 Hz
     # node = InitTest(
@@ -360,33 +411,25 @@ def main(args=None):
     #     timer_period=timer_period,
     # )
 
-    """" SINE WAVE TEST SETUP """
+    """ SINE WAVE TEST SETUP """
     # target_speed_m_s = 1.0
     # sine_freq = 1.0
-    # sine_ampl = 1.0
+    # sine_ampl_deg = 10.0
     # test_length = 10.0
     # timer_period = 0.01
-
     # node = SineWaveTest(
     #     target_speed_m_s=target_speed_m_s,
     #     sine_freq=sine_freq,
-    #     sine_ampl=sine_ampl,
+    #     sine_ampl_deg=sine_ampl_deg,
     #     test_length=test_length,
     #     timer_period=timer_period,
     # )
 
     """ RAMP STEER TEST SETUP """
-    """
-    - slip ratio = 0 (vx se v prubehu testu nemeni) 
-    - -> identifikace prubehu pricne sily v zavislosti na alfa
-    vysledek:
-    - ciste pricna dynamika pneumatiky pro predek i zadek
-    """
     # target_speed_m_s = 10.0  # m/s
-    # steering_rate = 1.0  # degrees
+    # steering_rate = 1.0  # deg/s
     # test_length = 20.0  # seconds
     # timer_period = 0.1  # 10 Hz
-
     # node = RampSteerTest(
     #     target_speed_m_s=target_speed_m_s,
     #     steering_angle_rate_deg_s=steering_rate,
@@ -395,34 +438,39 @@ def main(args=None):
     # )
 
     """ RAMP SPEED TEST SETUP """
-    """
-    - pro nejake nami vybane definovane alfa zacit zrychlovat (ale dostatecne pomalu pro male slip ratio)
-    - taky zmeri pouze pricnou dynamiku vozidla 
-    - casem se to auto urve 
-    """
-    start_speed_m_s = 1.0 
-    target_steer_deg = 0.0
-    acceleration_m_ss = 0.0  
-    test_length = 20.0  # seconds
-    timer_period = 0.01  # 100 Hz
+    # start_speed_m_s = 1.0
+    # target_steer_deg = 0.0
+    # acceleration_m_ss = 0.0
+    # test_length = 20.0  # seconds
+    # timer_period = 0.01  # 100 Hz
+    # node = RampSpeedTest(
+    #     node_name=f"rst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(acceleration_m_ss)}",
+    #     start_speed_m_s=start_speed_m_s,
+    #     target_steer_deg=target_steer_deg,
+    #     acceleration_m_ss=acceleration_m_ss,
+    #     test_length=test_length,
+    #     timer_period=timer_period,
+    # )
 
-    def sgn_str(x:int):
-        if x >= 0:
-            return ""
-        else:
-            return "_"
-    
-    node = RampSpeedTest(
-        node_name=f"rst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(acceleration_m_ss)}",
-        start_speed_m_s=start_speed_m_s,
+    """ COMBINED STEER & SPEED TEST SETUP """
+    starting_velocity = 1.0    # m/s
+    target_steer_deg = 0.0     # deg
+    steering_rate = 5.0        # deg/s
+    acceleration_m_ss = 1.0    # m/s^2
+    test_length = 20.0         # seconds
+    timer_period = 0.01        # 100 Hz
+
+    node = CombinedSteerSpeedTest(
+        node_name=f"csst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(steering_rate)}_{int(starting_velocity)}_{int(acceleration_m_ss)}",
+        starting_velocity=starting_velocity,
         target_steer_deg=target_steer_deg,
+        steering_rate=steering_rate,
         acceleration_m_ss=acceleration_m_ss,
         test_length=test_length,
-        timer_period=timer_period
+        timer_period=timer_period,
     )
 
-
-    """ NORMALNI SPUSTENI TESTU """
+    """ SPUSTENI TESTU """
     stop_requested = False
     previous_sigint_handler = signal.getsignal(signal.SIGINT)
 
@@ -447,28 +495,6 @@ def main(args=None):
             finally:
                 signal.signal(signal.SIGINT, previous_sigint_handler)
 
-    """ SPUSTENI SERIE TESTU PRO COMBINED SLIP """
-    """
-    - snaha identifikovat chovani pri combined slip
-    - zrychleni uz musi byt dostatecne velke, aby se slip ratio projevilo
-    - pokus zmapovat sirsi okoli side slip angle
-    -- principielne nebudu ani znat ciste podelnou dynamiku vozidla z cele serie testu
-    """
-    # # Vytvoření orchestrátoru
-    # orchestrator = CombinedStressTest(
-    #     start_speed_m_s=3.0,         # Rychlost pro zachycení čistého gripu
-    #     max_steer_deg=20.0,          # Maximální úhel, kam až chceme mapovat (např. 20°)
-    #     num_branches=4,              # Počet větví (vygeneruje testy pro 5°, 10°, 15°, 20°)
-    #     acceleration_m_ss=3.0,       # Pomalé přidávání plynu v driftu (m/s^2)
-    #     branch_test_length=12.0,     # Délka trvání JEDNOHO testu (v sekundách)
-    #     timer_period=0.01
-    # )
 
-    # try:
-    #     # Tímto se spustí celá série testů. Blokuje to, dokud se všechny nedokončí.
-    #     orchestrator.run()
-    # finally:
-    #     rclpy.shutdown()
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

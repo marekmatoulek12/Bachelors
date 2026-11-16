@@ -439,7 +439,7 @@ def main(log_path: str = '**'):
     print(f"\nGraf uložen do: {plot_path}")
 
 if __name__ == '__main__':
-    main('18.10.2026') # arg left empty means all log files scanned
+    main('16.11.2026') # arg left empty means all log files scanned
     # file_path = os.path.join(repo_root, 'log_files', '18.10.2026', 'rst_20_log_1792330050.csv')
     # calibrate_log(file_path)
     # calibrate_all_logs()

@@ -24,6 +24,7 @@ class LoggingConnectionBP(Node):
                  timer_period: float,
                  use_fw_encoders: bool = True,
                  steer_calib: dict[str, float] | None = None,
+                 lidar_yaw_offset_deg: float = -2.5,
                  ):
         super().__init__(node_name)
 
@@ -69,8 +70,10 @@ class LoggingConnectionBP(Node):
         self.last_gps_time = None
 
         # Proměnné pro derivaci GPS
+        self.lidar_yaw_offset_rad = float(np.deg2rad(lidar_yaw_offset_deg))
         self.last_gps_x = None
         self.last_gps_y = None
+        self.last_gps_yaw = None
 
         workspace_root = Path(__file__).resolve().parents[3]
         logs_dir = workspace_root / 'CSV_logs'
@@ -178,7 +181,6 @@ class LoggingConnectionBP(Node):
     ## --- CALLBACKS ---
     # velocity ekf update - GPS
     def gps_callback(self, msg):
-        # Aktualni pozice auta z GPS
         if msg is None:
             self.gps_x = float("nan")
             self.gps_y = float("nan")
@@ -188,26 +190,37 @@ class LoggingConnectionBP(Node):
         current_time = self.get_clock().now().nanoseconds / 1e9
         current_x = msg.pose.position.x
         current_y = msg.pose.position.y
-        self.gps_yaw = self.get_yaw_from_quaternion(msg.pose.orientation)
+        self.gps_yaw = self.get_yaw_from_quaternion(msg.pose.orientation) + self.lidar_yaw_offset_rad
         
-        if self.last_gps_time is not None and self.last_gps_x is not None:
+        if (
+            self.last_gps_time is not None
+            and self.last_gps_x is not None
+            and self.last_gps_yaw is not None
+            and (current_x != self.last_gps_x or current_y != self.last_gps_y)
+        ):
             dt_gps = current_time - self.last_gps_time
             if dt_gps > 0:
-                # 1. Rychlost v globálním souřadném systému mapy
                 v_X_global = (current_x - self.last_gps_x) / dt_gps
                 v_Y_global = (current_y - self.last_gps_y) / dt_gps
                 
-                # 2. Transformační matice (otočení o -yaw do soustavy auta)
-                c, s = cos(-self.gps_yaw), sin(-self.gps_yaw)
+                # Průměrný úhel v kroku dt_gps odstraní fázové zpoždění v zatáčce
+                yaw_mid = atan2(
+                    sin(self.gps_yaw) + sin(self.last_gps_yaw),
+                    cos(self.gps_yaw) + cos(self.last_gps_yaw),
+                )
+                c, s = cos(-yaw_mid), sin(-yaw_mid)
                 z_vx_gps = c * v_X_global - s * v_Y_global
                 z_vy_gps = s * v_X_global + c * v_Y_global
+
+                # Přepočet rychlosti ze zadní nápravy (base_link) do těžiště (rear_axle_len < 0)
+                if self.yaw_rate is not None and isfinite(self.yaw_rate):
+                    z_vy_gps += self.car.rear_axle_len * self.yaw_rate
                 
-                # 3. EKF Update z GPS (s fixní maticí šumu GPS)
                 self.ekf.update(z_vx_gps, z_vy_gps, self.ekf.R_gps)
 
-        # Uložení pro příští krok
         self.last_gps_x = current_x
         self.last_gps_y = current_y
+        self.last_gps_yaw = self.gps_yaw
         self.last_gps_time = current_time
         
         self.gps_x = current_x
@@ -385,7 +398,7 @@ class LoggingConnectionBP(Node):
             vx_rl = self.vx - self.yaw_rate * self.p_rl[1] # type: ignore
             vy_rl = self.vy + self.yaw_rate * self.p_rl[0] # type: ignore
             vx_rr = self.vx - self.yaw_rate * self.p_rr[1] # type: ignore
-            vy_rr = self.vx + self.yaw_rate * self.p_rr[0] # type: ignore
+            vy_rr = self.vy + self.yaw_rate * self.p_rr[0] # type: ignore
 
             v_ref_rl = max(abs(vx_rl), self.car.rear_wheel_radius * rl_rad_s, 0.2) # type: ignore
             v_ref_rr = max(abs(vx_rr), self.car.rear_wheel_radius * rr_rad_s, 0.2) # type: ignore
@@ -409,8 +422,8 @@ class LoggingConnectionBP(Node):
             
             # Kinematický výpočet
             z_vx = cos(steering_angle) * speed
-            z_vy = sin(steering_angle) * speed - (self.yaw_rate * self.car.front_axle_len)
-            
+            z_vy = float(self.ekf.x[1])  
+
             # Heuristika pro detekci driftu - akcelerace Y nad 4 m/s^2 nebo obrovský yaw_rate
             is_slipping = (self.acc_y is not None and abs(self.acc_y) > 4.0) or \
                         (self.yaw_rate is not None and abs(self.yaw_rate) > 2.0)
@@ -572,13 +585,12 @@ class PIDController:
 
 class VelocityEKF:
     def __init__(self):
-        # Stavy: [vx, vy]
         self.x = np.zeros(2)
-        self.P = np.eye(2) * 1.0
+        self.P = np.eye(2) * 0.1
         
-        self.Q = np.eye(2) * 0.05       # Šum modelu (IMU)
-        self.R_wheels = np.diag([0.1, 10]) # Šum kol (když nekloužou)
-        self.R_gps = np.eye(2) * 20    # Šum GPS (vyhlazení)
+        self.Q = np.diag([0.05, 0.05])       # Menší procesní šum (IMU je krátkodobě hladké)
+        self.R_wheels = np.diag([0.1, 1e6])  # Přední kola jen pro vx
+        self.R_gps = np.diag([2.0, 35.0])    # Vysoký rozptyl pro vy -> silně potlačí šum z GPS
 
     def predict(self, dt: float, ax: float, ay: float, yaw_rate: float):
         if dt <= 0: return

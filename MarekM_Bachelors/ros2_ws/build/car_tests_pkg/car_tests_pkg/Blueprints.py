@@ -16,116 +16,15 @@ from .Class_Blueprints import PIDGains, TwinTrackParams
 # source /home/cogni/cognicar_sdk/env.sh
 # source install/setup.bash
 
-class SimpleConnectionBP(Node):
-    def __init__(self, node_name: str, 
-                 control_loop: Callable[[], bool],
-                 timer_period: float,
-                 ):
-        super().__init__(node_name)
-
-        cogni_cfg = ci.Config()
-        cogni_cfg.backend = ci.Backend.Ros
-        cogni_cfg.simulation = False
-        self.cogni_car = ci.Cognicar()
-        if not self.cogni_car.Initialize(cogni_cfg):
-            raise SystemExit("Could not connect to the car or simulator.")
-        if not self.cogni_car.SetLidarEnabled(True):
-            raise SystemExit("Could not start LiDAR localization.")
-        self.car = TwinTrackParams()
-
-        
-        self.steer_cmd2real_rad_A = 0.7448
-        self.steer_cmd2real_rad_B = -1.5184
-
-        self.control_loop = control_loop
-        self.should_stop = False
-
-        self.timer = self.create_timer(timer_period, self._timer_callback)
-        
-        # Publishers pro rizeni
-        self.pub_steer = self.create_publisher(Float64, '/servo/front/angle_req', 10)
-        self.pub_rpm_rl = self.create_publisher(Float64, '/powertrain/rl/rpm_req', 10)
-        self.pub_rpm_rr = self.create_publisher(Float64, '/powertrain/rr/rpm_req', 10)
-
-    def _timer_callback(self):
-        keep_running = self.control_loop()
-        if not keep_running:
-            self.should_stop = True
-
-    def log_commands(self, rpm_req, steer_rad_req):
-        self.steer_rad_req = steer_rad_req
-        self.rpm_req = rpm_req
-
-    def publish_data(self):
-        # Publikovani dat do ROS topicu
-        msg_steer = Float64()
-        msg_steer.data = self.steer_rad_req
-        self.pub_steer.publish(msg_steer)
-
-        msg_rpm_rl = Float64()
-        msg_rpm_rr = Float64()
-        # prevodovka - rpm_req na zadni kola = 2 * rpm na motory
-        msg_rpm_rl.data = 2 * self.rpm_req
-        msg_rpm_rr.data = -2 * self.rpm_req # motory jsou rizeny opacne
-        self.pub_rpm_rl.publish(msg_rpm_rl)
-        self.pub_rpm_rr.publish(msg_rpm_rr)
-
-    def destroy_blueprint_node(self):
-        # Zastaveni timeru a ukonceni node
-        if self.timer is not None:
-            self.timer.cancel()
-        self.should_stop = True
-
-        # Pri Ctrl+C muze byt ROS kontext uz neplatny, proto nepublikujeme, pokud nefunguje.
-        try:
-            if rclpy.ok():
-                self.log_commands(0.0, 0.0)
-                self.publish_data()
-                self.get_logger().info("Resetovaci zprava odeslana")
-
-                timeout = Duration(seconds=1.0)
-                for publisher in (self.pub_steer, self.pub_rpm_rl, self.pub_rpm_rr):
-                    if not publisher.wait_for_all_acked(timeout):
-                        self.get_logger().warning(
-                            f"Neprislo potvrzeni doruceni z topicu {publisher.topic_name}."
-                        )
-
-        except Exception:
-            self.get_logger().warning("Shutdown publish selhal, pokracuji v ukonceni node.")
-        finally:
-            try:
-                self.cogni_car.Shutdown()
-            finally:
-                self.get_logger().info(f"Spojeni preruseno")
-                super().destroy_node()
-
-    def vx2rpm(self, vx: float):
-        return vx * 60 / (2 * pi * self.car.rear_wheel_radius)
-
-    def rpm2vx(self, rpm: float):
-        return rpm * (2 * pi * self.car.rear_wheel_radius) / 60
-
-    def steer_cmd2real_rad(self, cmd: float) -> float:
-        return self.steer_cmd2real_rad_A * cmd + self.steer_cmd2real_rad_B
-
-    def steer_real2cmd_rad(self, cmd: float) -> float:
-        return (cmd - self.steer_cmd2real_rad_B) / self.steer_cmd2real_rad_A
-
-    @staticmethod
-    def deg2rad(angle: float):
-        return angle * pi / 180
-
-    @staticmethod
-    def rad2deg(angle: float):
-        return angle * 180 / pi
-
 class LoggingConnectionBP(Node):
 
     ## --- CORE ---
     def __init__(self, node_name: str, 
                  control_loop: Callable[[], bool],
                  timer_period: float,
-                 use_fw_encoders: bool = True
+                 use_fw_encoders: bool = True,
+                 steer_calib: dict[str, float] | None = None,
+                 lidar_yaw_offset_deg: float = -2.5,
                  ):
         super().__init__(node_name)
 
@@ -138,8 +37,26 @@ class LoggingConnectionBP(Node):
         if not self.cogni_car.SetLidarEnabled(True):
             raise SystemExit("Could not start LiDAR localization.")
 
-        self.steer_cmd2real_rad_A = 0.7448
-        self.steer_cmd2real_rad_B = -1.5184
+        # Kalibrační parametry řízení ve formátu cmd -> real (hodnoty ve stupních)
+        calib = {
+            "xb1_deg": -3.03,
+            "xb2_deg": 2.67,
+            "k_left": 0.748,
+            "b_left_deg": 2.85,
+            "k_right": 0.743,
+            "b_right_deg": -1.40,
+            "offset_deg": 0.58,
+        }
+        if steer_calib is not None:
+            calib.update(steer_calib)
+
+        self.steer_xb1_deg = calib["xb1_deg"]
+        self.steer_xb2_deg = calib["xb2_deg"]
+        self.steer_k_left = calib["k_left"]
+        self.steer_b_left_deg = calib["b_left_deg"]
+        self.steer_k_right = calib["k_right"]
+        self.steer_b_right_deg = calib["b_right_deg"]
+        self.steer_offset_deg = calib["offset_deg"]
 
         self.car = TwinTrackParams()
         self.control_loop = control_loop
@@ -153,8 +70,10 @@ class LoggingConnectionBP(Node):
         self.last_gps_time = None
 
         # Proměnné pro derivaci GPS
+        self.lidar_yaw_offset_rad = float(np.deg2rad(lidar_yaw_offset_deg))
         self.last_gps_x = None
         self.last_gps_y = None
+        self.last_gps_yaw = None
 
         workspace_root = Path(__file__).resolve().parents[3]
         logs_dir = workspace_root / 'CSV_logs'
@@ -213,8 +132,7 @@ class LoggingConnectionBP(Node):
         self.csv_writer.writerow([
             'timestamp',
             'cmd_rpm',
-            'cmd_steer_rad',
-            'real_steer_rad',
+            'cmd_steer_deg',
             'gps_x',
             'gps_y', 
             'gps_yaw',
@@ -243,9 +161,8 @@ class LoggingConnectionBP(Node):
         self.rr_rpm_fb      = None
         self.fl_rpm         = None
         self.fr_rpm         = None
-        self.cmd_steer_rad  = None
+        self.cmd_steer_deg  = None
         self.cmd_rpm        = None
-        self.real_steer_rad   = None
 
         self._missing_data_warning = False
 
@@ -264,7 +181,6 @@ class LoggingConnectionBP(Node):
     ## --- CALLBACKS ---
     # velocity ekf update - GPS
     def gps_callback(self, msg):
-        # Aktualni pozice auta z GPS
         if msg is None:
             self.gps_x = float("nan")
             self.gps_y = float("nan")
@@ -274,26 +190,37 @@ class LoggingConnectionBP(Node):
         current_time = self.get_clock().now().nanoseconds / 1e9
         current_x = msg.pose.position.x
         current_y = msg.pose.position.y
-        self.gps_yaw = self.get_yaw_from_quaternion(msg.pose.orientation)
+        self.gps_yaw = self.get_yaw_from_quaternion(msg.pose.orientation) + self.lidar_yaw_offset_rad
         
-        if self.last_gps_time is not None and self.last_gps_x is not None:
+        if (
+            self.last_gps_time is not None
+            and self.last_gps_x is not None
+            and self.last_gps_yaw is not None
+            and (current_x != self.last_gps_x or current_y != self.last_gps_y)
+        ):
             dt_gps = current_time - self.last_gps_time
             if dt_gps > 0:
-                # 1. Rychlost v globálním souřadném systému mapy
                 v_X_global = (current_x - self.last_gps_x) / dt_gps
                 v_Y_global = (current_y - self.last_gps_y) / dt_gps
                 
-                # 2. Transformační matice (otočení o -yaw do soustavy auta)
-                c, s = cos(-self.gps_yaw), sin(-self.gps_yaw)
+                # Průměrný úhel v kroku dt_gps odstraní fázové zpoždění v zatáčce
+                yaw_mid = atan2(
+                    sin(self.gps_yaw) + sin(self.last_gps_yaw),
+                    cos(self.gps_yaw) + cos(self.last_gps_yaw),
+                )
+                c, s = cos(-yaw_mid), sin(-yaw_mid)
                 z_vx_gps = c * v_X_global - s * v_Y_global
                 z_vy_gps = s * v_X_global + c * v_Y_global
+
+                # Přepočet rychlosti ze zadní nápravy (base_link) do těžiště (rear_axle_len < 0)
+                if self.yaw_rate is not None and isfinite(self.yaw_rate):
+                    z_vy_gps += self.car.rear_axle_len * self.yaw_rate
                 
-                # 3. EKF Update z GPS (s fixní maticí šumu GPS)
                 self.ekf.update(z_vx_gps, z_vy_gps, self.ekf.R_gps)
 
-        # Uložení pro příští krok
         self.last_gps_x = current_x
         self.last_gps_y = current_y
+        self.last_gps_yaw = self.gps_yaw
         self.last_gps_time = current_time
         
         self.gps_x = current_x
@@ -339,7 +266,7 @@ class LoggingConnectionBP(Node):
 
 
         self.fl_rpm = msg.data
-        self.update_ekf_from_wheels(use= self.use_fw_encoders)
+        self.update_ekf_from_wheels(use=self.use_fw_encoders)
 
     def fr_callback(self, msg):
         if msg is None:
@@ -347,7 +274,7 @@ class LoggingConnectionBP(Node):
             return
 
         self.fr_rpm = msg.data
-        self.update_ekf_from_wheels(use= self.use_fw_encoders)
+        self.update_ekf_from_wheels(use=self.use_fw_encoders)
 
     def rl_callback(self, msg):
         # Aktualni zmerena rpm kol
@@ -366,9 +293,8 @@ class LoggingConnectionBP(Node):
         self.rr_rpm_fb = -msg.data / 2 ## spatne nastavene motory
         
     ## --- DATA HANDLING ---
-    def log_commands(self, cmd_rpm, cmd_steer_rad):
-        self.cmd_steer_rad = cmd_steer_rad
-        self.real_steer_rad = self.steer_cmd2real_rad(cmd_steer_rad)
+    def log_commands(self, cmd_rpm, cmd_steer_deg):
+        self.cmd_steer_deg = cmd_steer_deg
         self.cmd_rpm = cmd_rpm
 
     def log_data(self):
@@ -378,8 +304,7 @@ class LoggingConnectionBP(Node):
         self.csv_writer.writerow([
             ellapsed_time,
             self.cmd_rpm,
-            self.cmd_steer_rad,
-            self.real_steer_rad,
+            self.cmd_steer_deg,
             self.gps_x,
             self.gps_y,
             self.gps_yaw,
@@ -398,7 +323,7 @@ class LoggingConnectionBP(Node):
         # Publikovani dat do ROS topicu
         # Automaticky prepocet pozadavku
         msg_steer = Float64()
-        msg_steer.data = self.cmd_steer_rad
+        msg_steer.data = self.steer_real2cmd_deg2rad(self.cmd_steer_deg)
         self.pub_steer.publish(msg_steer)
 
         msg_rpm_rl = Float64()
@@ -419,7 +344,8 @@ class LoggingConnectionBP(Node):
         try:
             if rclpy.ok():
                 # snaha zastavit auto
-                self.publish_data(0.0, 0.0)
+                self.log_commands(0.0, 0.0)
+                self.publish_data()
                 self.get_logger().info("Resetovaci zprava odeslana")
 
                 timeout = Duration(seconds=1.0)
@@ -454,7 +380,6 @@ class LoggingConnectionBP(Node):
             self.rr_rpm_fb,
             self.fl_rpm,
             self.fr_rpm,
-            # self.real_steer_rad,
             )
         if any(v is None or not isfinite(float(v)) for v in values):
             if not self._missing_data_warning:
@@ -473,7 +398,7 @@ class LoggingConnectionBP(Node):
             vx_rl = self.vx - self.yaw_rate * self.p_rl[1] # type: ignore
             vy_rl = self.vy + self.yaw_rate * self.p_rl[0] # type: ignore
             vx_rr = self.vx - self.yaw_rate * self.p_rr[1] # type: ignore
-            vy_rr = self.vx + self.yaw_rate * self.p_rr[0] # type: ignore
+            vy_rr = self.vy + self.yaw_rate * self.p_rr[0] # type: ignore
 
             v_ref_rl = max(abs(vx_rl), self.car.rear_wheel_radius * rl_rad_s, 0.2) # type: ignore
             v_ref_rr = max(abs(vx_rr), self.car.rear_wheel_radius * rr_rad_s, 0.2) # type: ignore
@@ -486,18 +411,19 @@ class LoggingConnectionBP(Node):
             return alpha_rl, k_rl, alpha_rr, k_rr
         return None, None, None, None
 
+    ## THIS WILL NEED TWEAKING -- USING FRONT WHEELS WHEN DRIFTING
     def update_ekf_from_wheels(self, use: bool = True):
         # Máme všechna potřebná data?
         if (self.fl_rpm is not None and self.fr_rpm is not None and 
-            self.cmd_steer_rad is not None and self.yaw_rate is not None):
+            self.cmd_steer_deg is not None and self.yaw_rate is not None):
             
             speed = self.rpm2vx((self.fl_rpm + self.fr_rpm) / 2)
-            steering_angle = self.cmd_steer_rad
+            steering_angle = self.deg2rad(self.cmd_steer_deg)
             
             # Kinematický výpočet
             z_vx = cos(steering_angle) * speed
-            z_vy = sin(steering_angle) * speed - (self.yaw_rate * self.car.front_axle_len)
-            
+            z_vy = float(self.ekf.x[1])  
+
             # Heuristika pro detekci driftu - akcelerace Y nad 4 m/s^2 nebo obrovský yaw_rate
             is_slipping = (self.acc_y is not None and abs(self.acc_y) > 4.0) or \
                         (self.yaw_rate is not None and abs(self.yaw_rate) > 2.0)
@@ -505,6 +431,9 @@ class LoggingConnectionBP(Node):
             # Dynamické určení matice R
             if is_slipping or not use:
                 # Obrovský šum -> EKF bude kola ignorovat a pojede jen na IMU + GPS
+                # Kola porad dava smysl pouzivat i pri skluzu, jen to asi nebude tak presne.
+
+                # 1000 je vycucany z prdele, tohle jeste bude potreba odladit
                 current_R = self.ekf.R_wheels * 1000.0 
             else:
                 current_R = self.ekf.R_wheels
@@ -517,11 +446,71 @@ class LoggingConnectionBP(Node):
     def rpm2vx(self, rpm: float):
         return rpm * (2 * pi * self.car.rear_wheel_radius) / 60
 
-    def steer_cmd2real_rad(self, cmd: float) -> float:
-        return self.steer_cmd2real_rad_A * cmd + self.steer_cmd2real_rad_B
+    def steer_cmd2real_rad2deg(self, cmd_rad: float | np.ndarray) -> float | np.ndarray:
+        """
+        Převede povel řízení v radiánech na fyzický reálný úhel ve stupních
+        podle kalibrované 3-segmentové funkce s mrtvou zónou.
+        """
+        cmd_deg = np.rad2deg(cmd_rad)
 
-    def steer_real2cmd_rad(self, cmd: float) -> float:
-        return (cmd - self.steer_cmd2real_rad_B) / self.steer_cmd2real_rad_A
+        if np.isscalar(cmd_deg):
+            if cmd_deg < self.steer_xb1_deg:
+                real_steer_deg = self.steer_k_left * cmd_deg + self.steer_b_left_deg
+            elif cmd_deg > self.steer_xb2_deg:
+                real_steer_deg = self.steer_k_right * cmd_deg + self.steer_b_right_deg
+            else:
+                real_steer_deg = self.steer_offset_deg
+            return float(real_steer_deg)
+
+        cmd_deg_arr = np.asarray(cmd_deg, dtype=float)
+        real_steer_deg = np.empty_like(cmd_deg_arr, dtype=float)
+
+        mask_left = cmd_deg_arr < self.steer_xb1_deg
+        real_steer_deg[mask_left] = self.steer_k_left * cmd_deg_arr[mask_left] + self.steer_b_left_deg
+
+        mask_mid = (cmd_deg_arr >= self.steer_xb1_deg) & (cmd_deg_arr <= self.steer_xb2_deg)
+        real_steer_deg[mask_mid] = self.steer_offset_deg
+
+        mask_right = cmd_deg_arr > self.steer_xb2_deg
+        real_steer_deg[mask_right] = self.steer_k_right * cmd_deg_arr[mask_right] + self.steer_b_right_deg
+
+        return real_steer_deg
+
+    def steer_real2cmd_deg2rad(self, real_deg: float | np.ndarray) -> float | np.ndarray:
+        """
+        Inverzní funkce ke steer_cmd2real_rad2deg.
+        Převede požadovaný reálný úhel zatáčení ve stupních na povel řízení v radiánech
+        s kompenzací mrtvé zóny, sklonu a offsetu z parametrů v __init__.
+        """
+        # Pokud leží 0° v mrtvé zóně, použije se 0°; jinak střed mrtvé zóny
+        mid_cmd_deg = (
+            0.0
+            if (self.steer_xb1_deg <= 0.0 <= self.steer_xb2_deg)
+            else 0.5 * (self.steer_xb1_deg + self.steer_xb2_deg)
+        )
+
+        if np.isscalar(real_deg):
+            if real_deg < self.steer_offset_deg:
+                cmd_deg = (real_deg - self.steer_b_left_deg) / self.steer_k_left
+            elif real_deg > self.steer_offset_deg:
+                cmd_deg = (real_deg - self.steer_b_right_deg) / self.steer_k_right
+            else:
+                cmd_deg = mid_cmd_deg
+            return float(np.deg2rad(cmd_deg))
+
+        real_deg_arr = np.asarray(real_deg, dtype=float)
+        cmd_deg = np.empty_like(real_deg_arr, dtype=float)
+
+        mask_left = real_deg_arr < self.steer_offset_deg
+        cmd_deg[mask_left] = (real_deg_arr[mask_left] - self.steer_b_left_deg) / self.steer_k_left
+
+        mask_mid = real_deg_arr == self.steer_offset_deg
+        cmd_deg[mask_mid] = mid_cmd_deg
+
+        mask_right = real_deg_arr > self.steer_offset_deg
+        cmd_deg[mask_right] = (real_deg_arr[mask_right] - self.steer_b_right_deg) / self.steer_k_right
+
+        return np.deg2rad(cmd_deg)
 
     @staticmethod
     def deg2rad(angle: float):
@@ -596,13 +585,12 @@ class PIDController:
 
 class VelocityEKF:
     def __init__(self):
-        # Stavy: [vx, vy]
         self.x = np.zeros(2)
-        self.P = np.eye(2) * 1.0
+        self.P = np.eye(2) * 0.1
         
-        self.Q = np.eye(2) * 0.05       # Šum modelu (IMU)
-        self.R_wheels = np.diag([0.1, 10]) # Šum kol (když nekloužou)
-        self.R_gps = np.eye(2) * 20    # Šum GPS (vyhlazení)
+        self.Q = np.diag([0.05, 0.05])       # Menší procesní šum (IMU je krátkodobě hladké)
+        self.R_wheels = np.diag([0.1, 1e6])  # Přední kola jen pro vx
+        self.R_gps = np.diag([2.0, 35.0])    # Vysoký rozptyl pro vy -> silně potlačí šum z GPS
 
     def predict(self, dt: float, ax: float, ay: float, yaw_rate: float):
         if dt <= 0: return

@@ -121,6 +121,7 @@ class RampSteerTest(LoggingConnectionBP):
         steering_angle_rate_deg_s: float = 1.0,
         test_length: float = 20.0,
         timer_period: float = 0.1,
+
     ):
         super().__init__(
             node_name=node_name,
@@ -192,11 +193,14 @@ class RampSpeedTest(LoggingConnectionBP):
         acceleration_m_ss: float = 1.0,
         test_length: float = 20.0,
         timer_period: float = 0.1,
+        # lidar_yaw_offset_deg: float = 0,
+
     ):
         super().__init__(
             node_name=node_name,
             control_loop=self.control_loop,
             timer_period=timer_period,
+            # lidar_yaw_offset_deg=lidar_yaw_offset_deg,
         )
 
         self.start_speed = start_speed_m_s
@@ -233,7 +237,7 @@ class RampSpeedTest(LoggingConnectionBP):
                     tar_sp = self.start_speed
                     rpm_ff = self.vx2rpm(tar_sp)
                     rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
-                    self.get_logger().info(f"Error 1: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
+                    # self.get_logger().info(f"Error 1: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
                     rpm_req = rpm_ff + rpm_fb
                     steering_angle_req_deg = 0.0
 
@@ -247,7 +251,7 @@ class RampSpeedTest(LoggingConnectionBP):
                     tar_sp = self.start_speed
                     rpm_ff = self.vx2rpm(tar_sp)
                     rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
-                    self.get_logger().info(f"Error 2: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
+                    # self.get_logger().info(f"Error 2: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
                     rpm_req = rpm_ff + rpm_fb
 
                     time_from_ph_1 = current_time - self.ph_1_end_time
@@ -263,7 +267,7 @@ class RampSpeedTest(LoggingConnectionBP):
                     tar_sp = self.start_speed + self.acceleration * time_from_ph_2
                     rpm_ff = self.vx2rpm(tar_sp)
                     rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
-                    self.get_logger().info(f"Error 3: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
+                    # self.get_logger().info(f"Error 3: {(tar_sp - self.vx):.2f} m/s -- rpm fb: {rpm_fb:.2f}")
                     rpm_req = rpm_ff + rpm_fb
                     steering_angle_req_deg = self.target_steer_deg
 
@@ -435,7 +439,7 @@ def main(args=None):
 
     """ RAMP SPEED TEST SETUP """
     start_speed_m_s = 1.0
-    target_steer_deg = 0.0
+    target_steer_deg = -20.0
     acceleration_m_ss = 0.0
     test_length = 20.0  # seconds
     timer_period = 0.01  # 100 Hz
@@ -446,6 +450,7 @@ def main(args=None):
         acceleration_m_ss=acceleration_m_ss,
         test_length=test_length,
         timer_period=timer_period,
+        # lidar_yaw_offset_deg=0
     )
 
     """ COMBINED STEER & SPEED TEST SETUP """

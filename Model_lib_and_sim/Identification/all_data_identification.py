@@ -248,7 +248,7 @@ class IdentificationOrchestrator:
         }
 
     def load_and_process_logs(self):
-        search_pattern = str(self.target_dir / 'calibrated_*.csv')
+        search_pattern = str(self.target_dir / '*.csv')
         log_files = glob.glob(search_pattern)
         
         if not log_files:
@@ -272,7 +272,7 @@ class IdentificationOrchestrator:
                     continue
 
                 # Single-Track Processing
-                st_handler = SingleTrackIdentification(df, start_from=1.0)
+                st_handler = SingleTrackIdentification(df, start_from=2.0)
                 st_handler.prepare_data()
                 st_handler.slip_variables_calculation()
                 st_handler.wheel_forces_calculation()
@@ -293,7 +293,7 @@ class IdentificationOrchestrator:
                 self.all_st_data.append(st_log_data)
                 
                 # Dual-Track Processing
-                dt_handler = DualTrackIdentification(df, start_from=1.0)
+                dt_handler = DualTrackIdentification(df, start_from=2.0)
                 dt_handler.prepare_data()
                 dt_handler.slip_variables_calculation()
                 dt_handler.wheel_forces_calculation()
@@ -432,7 +432,7 @@ class IdentificationOrchestrator:
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
         fig.suptitle("Single-Track: Agregovaná identifikace pneumatik", fontsize=14)
 
-        cmap, min_angle, max_angle, get_color = self._get_color_map_info()
+        cmap, min_angle, max_angle, get_color = self._get_color_map_info(use_abs=False)
 
         for data in self.all_st_data:
             c = get_color(data['cmd_angle'])
@@ -609,13 +609,13 @@ def main(target: Path = ""):
     orchestrator = IdentificationOrchestrator(target_dir)
     orchestrator.load_and_process_logs()
     
-    orchestrator.plot_aggregated_raw_data()
+    orchestrator.plot_aggregated_raw_data(use_abs=False)
     orchestrator.plot_aggregated_st_models()
-    orchestrator.plot_aggregated_dt_models()
-    orchestrator.plot_aggregated_combined_slip()
+    # orchestrator.plot_aggregated_dt_models()
+    # orchestrator.plot_aggregated_combined_slip()
     
     plt.show()
 
 if __name__ == '__main__':
-    target = Path("Calibrated")
+    target = Path("Calib_tests")
     main(target)

@@ -468,6 +468,14 @@ def calibrate_log(
         df["vx"] = vx_cal
         df["vy"] = vy_cal
 
+        # Apply the exact same sensor bias corrections to the saved CSV columns
+        if "accel_y" in df.columns:
+            df["accel_y"] = df["accel_y"] - ay_bias
+        if "yaw_rate" in df.columns:
+            df["yaw_rate"] = df["yaw_rate"] - yaw_rate_bias
+        if "gps_yaw" in df.columns:
+            df["gps_yaw"] = df["gps_yaw"] + lidar_yaw_offset_rad
+
     target_dir = output_dir or os.path.join(repo_root, "Model_lib_and_sim", "Identification", "Calibrated")
     os.makedirs(target_dir, exist_ok=True)
 

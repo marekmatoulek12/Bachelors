@@ -24,7 +24,6 @@ class LoggingConnectionBP(Node):
                  timer_period: float,
                  use_fw_encoders: bool = True,
                  steer_calib: dict[str, float] | None = None,
-                 lidar_yaw_offset_deg: float = -2.5,
                  ):
         super().__init__(node_name)
 
@@ -69,8 +68,12 @@ class LoggingConnectionBP(Node):
         self.last_imu_time = None
         self.last_gps_time = None
 
-        # Proměnné pro derivaci GPS
-        self.lidar_yaw_offset_rad = float(np.deg2rad(lidar_yaw_offset_deg))
+        # Změřeno jednou v klidu na rovině (stejně jako kalibrace řízení)
+        self.ax_bias = 0.0        # doplň průměr z klidového logu
+        self.ay_bias = -0.12      # z tvého grafu střed mezi +1.10 a -1.35 m/s^2
+        self.yaw_rate_bias = 0.001  # doplň průměr z klidového logu
+        self.lidar_yaw_offset_deg = -2.32
+
         self.last_gps_x = None
         self.last_gps_y = None
         self.last_gps_yaw = None
@@ -168,8 +171,8 @@ class LoggingConnectionBP(Node):
 
         self.p_fl = (self.car.front_axle_len, self.car.front_track_width / 2)
         self.p_fr = (self.car.front_axle_len, -self.car.front_track_width / 2)
-        self.p_rl = (self.car.rear_axle_len, self.car.rear_track_width / 2)
-        self.p_rr = (self.car.rear_axle_len, -self.car.rear_track_width / 2)
+        self.p_rl = (-self.car.rear_axle_len, self.car.rear_track_width / 2)
+        self.p_rr = (-self.car.rear_axle_len, -self.car.rear_track_width / 2)
 
         self.START_TIME = self.get_clock().now().nanoseconds / 1e9
 
@@ -190,7 +193,7 @@ class LoggingConnectionBP(Node):
         current_time = self.get_clock().now().nanoseconds / 1e9
         current_x = msg.pose.position.x
         current_y = msg.pose.position.y
-        self.gps_yaw = self.get_yaw_from_quaternion(msg.pose.orientation) + self.lidar_yaw_offset_rad
+        self.gps_yaw = self.get_yaw_from_quaternion(msg.pose.orientation) + self.deg2rad(self.lidar_yaw_offset_deg)
         
         if (
             self.last_gps_time is not None
@@ -242,9 +245,13 @@ class LoggingConnectionBP(Node):
         #        |                |
         #        |                |
 
-        self.acc_x = msg.linear_acceleration.y
-        self.acc_y = -msg.linear_acceleration.x
-        self.yaw_rate = msg.angular_velocity.z
+        raw_ax = msg.linear_acceleration.y
+        raw_ay = -msg.linear_acceleration.x
+        raw_gz = msg.angular_velocity.z
+
+        self.acc_x = raw_ax - self.ax_bias
+        self.acc_y = raw_ay - self.ay_bias
+        self.yaw_rate = raw_gz - self.yaw_rate_bias
 
         # EKF Predikce
         current_time = self.get_clock().now().nanoseconds / 1e9
@@ -588,9 +595,9 @@ class VelocityEKF:
         self.x = np.zeros(2)
         self.P = np.eye(2) * 0.1
         
-        self.Q = np.diag([0.05, 0.05])       # Menší procesní šum (IMU je krátkodobě hladké)
-        self.R_wheels = np.diag([0.1, 1e6])  # Přední kola jen pro vx
-        self.R_gps = np.diag([2.0, 35.0])    # Vysoký rozptyl pro vy -> silně potlačí šum z GPS
+        self.Q = np.diag([0.5, 0.5])            # Menší procesní šum (IMU je krátkodobě hladké)
+        self.R_wheels = np.diag([0.1, 1e6])     # Přední kola jen pro vx
+        self.R_gps = np.diag([2.0, 35.0])       # Vysoký rozptyl pro vy -> silně potlačí šum z GPS
 
     def predict(self, dt: float, ax: float, ay: float, yaw_rate: float):
         if dt <= 0: return
@@ -606,7 +613,7 @@ class VelocityEKF:
         ])
         
         self.x = np.array([vx_new, vy_new])
-        self.P = F @ self.P @ F.T + self.Q
+        self.P = F @ self.P @ F.T + self.Q * dt # dt experimentation
 
     def update(self, z_vx: float, z_vy: float, R_matrix: np.ndarray):
         z = np.array([z_vx, z_vy])

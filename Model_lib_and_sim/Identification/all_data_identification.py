@@ -424,7 +424,7 @@ class IdentificationOrchestrator:
 
         fig_gps.tight_layout()
 
-    def plot_aggregated_st_models(self):
+    def plot_aggregated_st_models(self, use_abs=True):
         if not self.all_st_data:
             print("Žádná ST data k vykreslení.")
             return
@@ -432,7 +432,7 @@ class IdentificationOrchestrator:
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
         fig.suptitle("Single-Track: Agregovaná identifikace pneumatik", fontsize=14)
 
-        cmap, min_angle, max_angle, get_color = self._get_color_map_info(use_abs=False)
+        cmap, min_angle, max_angle, get_color = self._get_color_map_info(use_abs=use_abs)
 
         for data in self.all_st_data:
             c = get_color(data['cmd_angle'])
@@ -459,7 +459,7 @@ class IdentificationOrchestrator:
 
         fig.tight_layout()
 
-    def plot_aggregated_dt_models(self):
+    def plot_aggregated_dt_models(self, use_abs=True):
         if not self.all_dt_data:
             print("Žádná DT data k vykreslení.")
             return
@@ -467,7 +467,7 @@ class IdentificationOrchestrator:
         fig, axes = plt.subplots(2, 3, figsize=(18, 10))
         fig.suptitle("Dual-Track: Agregovaná identifikace pneumatik levého a pravého kola", fontsize=16)
 
-        cmap, min_angle, max_angle, get_color = self._get_color_map_info()
+        cmap, min_angle, max_angle, get_color = self._get_color_map_info(use_abs=use_abs)
 
         # Vlevo dole chceme prazdno - vypneme osu
         axes[1, 0].axis('off')
@@ -609,13 +609,13 @@ def main(target: Path = ""):
     orchestrator = IdentificationOrchestrator(target_dir)
     orchestrator.load_and_process_logs()
     
-    orchestrator.plot_aggregated_raw_data(use_abs=False)
-    orchestrator.plot_aggregated_st_models()
+    orchestrator.plot_aggregated_raw_data(use_abs=True)
+    orchestrator.plot_aggregated_st_models(use_abs=True)
     # orchestrator.plot_aggregated_dt_models()
     # orchestrator.plot_aggregated_combined_slip()
     
     plt.show()
 
 if __name__ == '__main__':
-    target = Path("Calib_tests")
+    target = Path("Calibrated")
     main(target)

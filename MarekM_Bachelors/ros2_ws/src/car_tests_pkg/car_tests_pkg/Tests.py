@@ -193,14 +193,11 @@ class RampSpeedTest(LoggingConnectionBP):
         acceleration_m_ss: float = 1.0,
         test_length: float = 20.0,
         timer_period: float = 0.1,
-        # lidar_yaw_offset_deg: float = 0,
-
     ):
         super().__init__(
             node_name=node_name,
             control_loop=self.control_loop,
             timer_period=timer_period,
-            # lidar_yaw_offset_deg=lidar_yaw_offset_deg,
         )
 
         self.start_speed = start_speed_m_s
@@ -450,7 +447,6 @@ def main(args=None):
         acceleration_m_ss=acceleration_m_ss,
         test_length=test_length,
         timer_period=timer_period,
-        # lidar_yaw_offset_deg=0
     )
 
     """ COMBINED STEER & SPEED TEST SETUP """

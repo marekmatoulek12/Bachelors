@@ -1,3 +1,0 @@
-[console_scripts]
-keyboard_controller = car_tests_pkg.Keyboard_Controller:main
-run_test = car_tests_pkg.Tests:main

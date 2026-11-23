@@ -33,13 +33,24 @@ class BaseIdentification:
         self.timestamp = data["timestamp"].to_numpy()
         self.cmd_rpm = data["cmd_rpm"].to_numpy()
 
+        is_in_rad = True
+        
         if "real_steer_rad" in data.columns:
             steer_column = "real_steer_rad"
-        else:
+            print("Artificially calibrated log")
+        
+        elif "cmd_steer_rad" in data.columns:
             steer_column = "cmd_steer_rad"
-
-        # steer_column = "cmd_steer_rad" # for comparison purposes
+            print("Uncalibrated log")
+        
+        else:
+            steer_column = "cmd_steer_deg"
+            is_in_rad = False
+            print("Calibrated IRL log")
+        
         self.cmd_steer_rad = data[steer_column].to_numpy()
+        if not is_in_rad:
+            self.cmd_steer_rad = np.deg2rad(self.cmd_steer_rad)
 
         self.gps_x = data["gps_x"].to_numpy()
         self.gps_y = data["gps_y"].to_numpy()
@@ -54,6 +65,10 @@ class BaseIdentification:
         self.rr_rpm = data["rr_rpm"].to_numpy()
         self.fl_rpm = data["fl_rpm"].to_numpy()
         self.fr_rpm = data["fr_rpm"].to_numpy()
+        self.rl_current_req = data["rl_current_req"].to_numpy()
+        self.rl_current_fb = data["rl_current_fb"].to_numpy()
+        self.rr_current_req = data["rr_current_req"].to_numpy()
+        self.rr_current_fb = data["rr_current_fb"].to_numpy()
 
         self.N = len(self.timestamp)
         self.car = VehicleParams()
@@ -159,6 +174,18 @@ class BaseIdentification:
         rpm_ax.grid(True)
         rpm_ax.legend()
         fig_rpm.tight_layout()
+
+        fig_current, current_ax = plt.subplots()
+        current_ax.plot(time, self.rl_current_req, label="RL requested")
+        current_ax.plot(time, self.rl_current_fb, label="RL feedback")
+        current_ax.plot(time, self.rr_current_req, label="RR requested")
+        current_ax.plot(time, self.rr_current_fb, label="RR feedback")
+        current_ax.set_title(f"{title_prefix} Rear Wheel Current")
+        current_ax.set_xlabel("Time [s]")
+        current_ax.set_ylabel("Current [A]")
+        current_ax.grid(True)
+        current_ax.legend()
+        fig_current.tight_layout()
 
     def steer_yaw_csv(self, output_path: str = "steer_yaw_analysis.csv"):
         # Složení sloupců za sebe do slovníku
@@ -555,12 +582,12 @@ def main():
     st_handler.prepare_data()
     # st_handler.steer_yaw_csv(args.out_file)
     st_handler.plot_prepared_data(title_prefix="Single-Track") # Společné pro oba, stačí vykreslit jednou
-    st_handler.slip_variables_calculation()
-    st_handler.wheel_forces_calculation()
+    # st_handler.slip_variables_calculation()
+    # st_handler.wheel_forces_calculation()
     
-    st_handler.plot_slip_variables()
+    # st_handler.plot_slip_variables()
     # st_handler.plot_wheel_forces()
-    st_handler.plot_tire_models()
+    # st_handler.plot_tire_models()
     #st_handler.plot_combined_slip_forces()
     
     # # ---------------------------------------------------------

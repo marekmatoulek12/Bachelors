@@ -329,24 +329,28 @@ class CombinedSteerSpeedTest(LoggingConnectionBP):
         if self.all_data_available():
             match self.test_phase:
                 case 1:
-                    # Faze 1: Zrychleni na pocatecni rychlost
-                    tar_sp = self.starting_velocity
+                    # Faze 1: Plynule zrychlit na pocatecni rychlost
+                    phase_1_duration = self.starting_velocity * 1.5
+                    tar_sp = self.starting_velocity * min(elapsed_time / phase_1_duration, 1.0)
                     rpm_ff = self.vx2rpm(tar_sp)
                     rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
                     rpm_req = rpm_ff + rpm_fb
                     steering_angle_req_deg = 0.0
 
                     self.get_logger().info(
-                        f"Faze 1 | v: {self.vx:.2f}/{tar_sp:.2f} m/s | steer: {steering_angle_req_deg:.2f} deg"
+                        f"Faze 1 | v: {self.vx:.2f}/{tar_sp:.2f} m/s | steer: {steering_angle_req_deg:.2f} deg | rpm_req: {rpm_req:.2f}"
                     )
 
-                    if self.starting_velocity <= 0.0 or self.vx >= self.starting_velocity * 0.95:  # type: ignore
+                    if (
+                        elapsed_time >= phase_1_duration
+                        and (self.starting_velocity <= 0.0 or self.vx >= self.starting_velocity * 0.95)  # type: ignore
+                    ):
                         self.test_phase = 2
                         self.ph_1_end_time = current_time
 
                 case 2:
                     # Faze 2: Udrzet pocatecni rychlost a nastavit vychozi uhel zatoceni
-                    phase_2_duration = 1.0
+                    phase_2_duration = 2.0
                     tar_sp = self.starting_velocity
                     rpm_ff = self.vx2rpm(tar_sp)
                     rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
@@ -362,7 +366,7 @@ class CombinedSteerSpeedTest(LoggingConnectionBP):
                             time_from_ph_1 / phase_2_duration, 1.0
                         )
                         self.get_logger().info(
-                            f"Faze 2 | v: {self.vx:.2f} m/s | steer: {steering_angle_req_deg:.2f}/{self.target_steer_deg:.2f} deg"
+                            f"Faze 2 | v: {self.vx:.2f} m/s | steer: {steering_angle_req_deg:.2f}/{self.target_steer_deg:.2f} deg | rpm_req: {rpm_req:.2f}"
                         )
                         if time_from_ph_1 >= phase_2_duration:
                             self.test_phase = 3
@@ -379,7 +383,7 @@ class CombinedSteerSpeedTest(LoggingConnectionBP):
                     rpm_req = rpm_ff + rpm_fb
 
                     self.get_logger().info(
-                        f"Faze 3 | tar_v: {tar_sp:.2f} (act: {self.vx:.2f}) m/s | steer: {steering_angle_req_deg:.2f} deg"
+                        f"Faze 3 | tar_v: {tar_sp:.2f} (act: {self.vx:.2f}) m/s | steer: {steering_angle_req_deg:.2f} deg | rpm_req: {rpm_req:.2f}"
                     )
 
             # Logovani pozadavku (steering ve stupnich)
@@ -403,7 +407,7 @@ def main(args=None):
     # test_length = 20.0  # seconds
     # timer_period = 0.05  # 20 Hz
     # node = InitTest(
-    #     node_name="first_test_eva",
+    #     node_name="biases_test",
     #     test_length=test_length,
     #     timer_period=timer_period,
     # )
@@ -435,37 +439,37 @@ def main(args=None):
     # )
 
     """ RAMP SPEED TEST SETUP """
-    start_speed_m_s = 1.0
-    target_steer_deg = -20.0
-    acceleration_m_ss = 0.0
-    test_length = 20.0  # seconds
-    timer_period = 0.01  # 100 Hz
-    node = RampSpeedTest(
-        node_name=f"rst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(acceleration_m_ss)}",
-        start_speed_m_s=start_speed_m_s,
-        target_steer_deg=target_steer_deg,
-        acceleration_m_ss=acceleration_m_ss,
-        test_length=test_length,
-        timer_period=timer_period,
-    )
-
-    """ COMBINED STEER & SPEED TEST SETUP """
-    # starting_velocity = 1.0    # m/s
-    # target_steer_deg = 0.0     # deg
-    # steering_rate = 5.0        # deg/s
-    # acceleration_m_ss = 1.0    # m/s^2
-    # test_length = 20.0         # seconds
-    # timer_period = 0.01        # 100 Hz
-
-    # node = CombinedSteerSpeedTest(
-    #     node_name=f"csst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(steering_rate)}_{int(starting_velocity)}_{int(acceleration_m_ss)}",
-    #     starting_velocity=starting_velocity,
+    # start_speed_m_s = 1.0
+    # target_steer_deg = -20.0
+    # acceleration_m_ss = 0.0
+    # test_length = 20.0  # seconds
+    # timer_period = 0.01  # 100 Hz
+    # node = RampSpeedTest(
+    #     node_name=f"rst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{int(acceleration_m_ss)}",
+    #     start_speed_m_s=start_speed_m_s,
     #     target_steer_deg=target_steer_deg,
-    #     steering_rate=steering_rate,
     #     acceleration_m_ss=acceleration_m_ss,
     #     test_length=test_length,
     #     timer_period=timer_period,
     # )
+
+    # """ COMBINED STEER & SPEED TEST SETUP """
+    starting_velocity = 1.0    # m/s
+    target_steer_deg = 10.0     # deg
+    steering_rate = 4.0        # deg/s
+    acceleration_m_ss = 0.3    # m/s^2
+    test_length = 20.0         # seconds
+    timer_period = 0.01        # 100 Hz
+
+    node = CombinedSteerSpeedTest(
+        node_name=f"""csst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{sgn_str(steering_rate)}{int(abs(steering_rate))}_{int(starting_velocity)}_{sgn_str(acceleration_m_ss)}{int(acceleration_m_ss)}""",
+        starting_velocity=starting_velocity,
+        target_steer_deg=target_steer_deg,
+        steering_rate=steering_rate,
+        acceleration_m_ss=acceleration_m_ss,
+        test_length=test_length,
+        timer_period=timer_period,
+    )
 
     """ SPUSTENI TESTU """
     stop_requested = False

@@ -69,10 +69,10 @@ class LoggingConnectionBP(Node):
         self.last_gps_time = None
 
         # Změřeno jednou v klidu na rovině (stejně jako kalibrace řízení)
-        self.ax_bias = 0.0        # doplň průměr z klidového logu
-        self.ay_bias = -0.12      # z tvého grafu střed mezi +1.10 a -1.35 m/s^2
-        self.yaw_rate_bias = 0.001  # doplň průměr z klidového logu
-        self.lidar_yaw_offset_deg = -2.32
+        self.ax_bias = -0.055       # doplň průměr z klidového logu
+        self.ay_bias = -0.042      # z tvého grafu střed mezi +1.10 a -1.35 m/s^2
+        self.yaw_rate_bias = 0.0034  # doplň průměr z klidového logu
+        self.lidar_yaw_offset_deg = -3.75
 
         self.last_gps_x = None
         self.last_gps_y = None
@@ -127,6 +127,34 @@ class LoggingConnectionBP(Node):
             10
         )
 
+
+        self.sub_rl_curr_req = self.create_subscription(
+            Float64,
+            '/powertrain/rl/current_req', ## idk jestli topic dobre
+            self.rl_current_req_callback,
+            10
+        )
+        self.sub_rl_curr_fb = self.create_subscription(
+            Float64,
+            '/powertrain/rl/current_fb', ## idk jestli topic dobre
+            self.rl_current_fb_callback,
+            10
+        )
+        self.sub_rr_curr_req = self.create_subscription(
+            Float64,
+            '/powertrain/rr/current_req', ## idk jestli topic dobre
+            self.rr_current_req_callback,
+            10
+        )
+        self.sub_rr_curr_fb = self.create_subscription(
+            Float64,
+            '/powertrain/rr/current_fb', ## idk jestli topic dobre
+            self.rr_current_fb_callback,
+            10
+        )
+
+
+
         # Nastaveni logovani do CSV
         self.log_filename = str(logs_dir / f'{self.get_name()}_log_{int(time.time())}.csv')
         self.log_file = open(self.log_filename, mode='w', newline='')
@@ -147,7 +175,11 @@ class LoggingConnectionBP(Node):
             'rl_rpm',
             'rr_rpm',
             'fl_rpm',
-            'fr_rpm'
+            'fr_rpm',
+            'rl_current_req',
+            'rl_current_fb',
+            'rr_current_req',
+            'rr_current_fb'
             ])
         
         self.get_logger().info(f"Test '{self.get_name()}' inicializovan.")
@@ -164,6 +196,10 @@ class LoggingConnectionBP(Node):
         self.rr_rpm_fb      = None
         self.fl_rpm         = None
         self.fr_rpm         = None
+        self.rl_current_req = None
+        self.rl_current_fb  = None
+        self.rr_current_req = None
+        self.rr_current_fb  = None
         self.cmd_steer_deg  = None
         self.cmd_rpm        = None
 
@@ -202,7 +238,7 @@ class LoggingConnectionBP(Node):
             and (current_x != self.last_gps_x or current_y != self.last_gps_y)
         ):
             dt_gps = current_time - self.last_gps_time
-            if dt_gps > 0:
+            if 0 < dt_gps < 0.5:
                 v_X_global = (current_x - self.last_gps_x) / dt_gps
                 v_Y_global = (current_y - self.last_gps_y) / dt_gps
                 
@@ -215,9 +251,9 @@ class LoggingConnectionBP(Node):
                 z_vx_gps = c * v_X_global - s * v_Y_global
                 z_vy_gps = s * v_X_global + c * v_Y_global
 
-                # Přepočet rychlosti ze zadní nápravy (base_link) do těžiště (rear_axle_len < 0)
+                x_pos = self.car.rear_axle_len - 0.02 # lidar 2 cm ahead of rear axle
                 if self.yaw_rate is not None and isfinite(self.yaw_rate):
-                    z_vy_gps += self.car.rear_axle_len * self.yaw_rate
+                    z_vy_gps -= x_pos * self.yaw_rate
                 
                 self.ekf.update(z_vx_gps, z_vy_gps, self.ekf.R_gps)
 
@@ -298,6 +334,18 @@ class LoggingConnectionBP(Node):
             return
 
         self.rr_rpm_fb = -msg.data / 2 ## spatne nastavene motory
+
+    def rl_current_req_callback(self, msg):
+        self.rl_current_req = float("nan") if msg is None else msg.data
+
+    def rl_current_fb_callback(self, msg):
+        self.rl_current_fb = float("nan") if msg is None else msg.data
+
+    def rr_current_req_callback(self, msg):
+        self.rr_current_req = float("nan") if msg is None else msg.data
+
+    def rr_current_fb_callback(self, msg):
+        self.rr_current_fb = float("nan") if msg is None else msg.data
         
     ## --- DATA HANDLING ---
     def log_commands(self, cmd_rpm, cmd_steer_deg):
@@ -323,7 +371,11 @@ class LoggingConnectionBP(Node):
             self.rl_rpm_fb,
             self.rr_rpm_fb,
             self.fl_rpm,
-            self.fr_rpm
+            self.fr_rpm,
+            self.rl_current_req,
+            self.rl_current_fb,
+            self.rr_current_req,
+            self.rr_current_fb
         ])
 
     def publish_data(self):
@@ -597,7 +649,7 @@ class VelocityEKF:
         
         self.Q = np.diag([0.5, 0.5])            # Menší procesní šum (IMU je krátkodobě hladké)
         self.R_wheels = np.diag([0.1, 1e6])     # Přední kola jen pro vx
-        self.R_gps = np.diag([2.0, 35.0])       # Vysoký rozptyl pro vy -> silně potlačí šum z GPS
+        self.R_gps = np.diag([4.0, 4.0])        # vetsi sum pro gps, protoze vice skace
 
     def predict(self, dt: float, ax: float, ay: float, yaw_rate: float):
         if dt <= 0: return

@@ -23,7 +23,7 @@ class VehicleParams:
     cg_height: float = 0.05
 
 class BaseIdentification:
-    def __init__(self, data: pd.DataFrame, start_from: float = 1.0) -> None:
+    def __init__(self, data: pd.DataFrame, start_from: float = 0.0) -> None:
         if start_from > 0.0:
             first_timestamp = data["timestamp"].iloc[0]
             data = data[data["timestamp"] >= (first_timestamp + start_from)]
@@ -205,11 +205,23 @@ class DualTrackIdentification(BaseIdentification):
         self.Fx_rr_koeff = self.Fx_rr / self.Fz_rr
 
 class IdentificationOrchestrator:
-    def __init__(self, target_dir: Path):
-        self.target_dir = target_dir
+    def __init__(self, target_dir: str | Path = ""):
+        self.target_dir = "" if target_dir in ("", Path("")) else str(target_dir)
         self.all_st_data = []
         self.all_dt_data = []
         self.all_raw_objects = []
+        self.repo_root = self._find_repo_root()
+
+
+    @staticmethod
+    def _find_repo_root():
+        current = os.path.abspath(os.path.dirname(__file__))
+        while current != '/' and 'Model_lib_and_sim' not in os.listdir(current):
+            parent = os.path.dirname(current)
+            if parent == current:
+                return os.path.abspath(os.path.dirname(__file__))
+            current = parent
+        return current
 
     @staticmethod
     def _parse_log_params(filename: str) -> dict[str, float]:
@@ -247,21 +259,32 @@ class IdentificationOrchestrator:
             'acceleration': 0.0,
         }
 
-    def load_and_process_logs(self):
-        search_pattern = str(self.target_dir / '*.csv')
-        log_files = glob.glob(search_pattern)
-        
-        if not log_files:
-            print(f"Nenalezeny žádné kalibrované logy v: {self.target_dir}")
+    def load_and_process_logs(self, start_from: float = 1.5):
+        if self.target_dir:
+            if os.path.isdir(self.target_dir):
+                base_dir = os.path.abspath(self.target_dir)
+            else:
+                base_dir = os.path.join(self.repo_root, 'log_files', self.target_dir)
+        else:
+            base_dir = os.path.join(self.repo_root, 'log_files')
+
+        if not os.path.exists(base_dir):
+            print(f"Chyba: Složka {base_dir} neexistuje.")
             return
-            
-        print(f"Orchestrátor: Nalezeno {len(log_files)} souborů. Zpracovávám pro ST a DT modely...")
+
+        search_pattern = os.path.join(base_dir, '**', '*.csv')
+        log_files = sorted(glob.glob(search_pattern, recursive=True))
+
+        if not log_files:
+            print(f"Nenalezeny žádné logy v: {base_dir}")
+            return
+
+        print(f"Orchestrátor: Nalezeno {len(log_files)} souborů v '{base_dir}'. Zpracovávám pro ST a DT modely...")
 
         for file in log_files:
             try:
                 params = self._parse_log_params(Path(file).name)
-                
-                # Jednotlivé proměnné pro přímé použití
+
                 target_steer_deg = params['target_steer_deg']
                 steering_rate = params['steering_rate']
                 starting_velocity = params['starting_velocity']
@@ -272,16 +295,15 @@ class IdentificationOrchestrator:
                     continue
 
                 # Single-Track Processing
-                st_handler = SingleTrackIdentification(df, start_from=2.0)
+                st_handler = SingleTrackIdentification(df, start_from=start_from)
                 st_handler.prepare_data()
                 st_handler.slip_variables_calculation()
                 st_handler.wheel_forces_calculation()
-                
-                # Uložení celého slovníku parametrů místo samotného úhlu
+
                 self.all_raw_objects.append((params, st_handler))
-                
+
                 st_log_data = {
-                    'cmd_angle': target_steer_deg,  # zachováno kvůli kompatibilitě se stávajícími grafy
+                    'cmd_angle': target_steer_deg,
                     **params,
                     'alpha_f': st_handler.alpha_f,
                     'Fyf_koeff': st_handler.Fyf_koeff,
@@ -291,13 +313,13 @@ class IdentificationOrchestrator:
                     'Fxr_koeff': st_handler.Fxr_koeff,
                 }
                 self.all_st_data.append(st_log_data)
-                
+
                 # Dual-Track Processing
-                dt_handler = DualTrackIdentification(df, start_from=2.0)
+                dt_handler = DualTrackIdentification(df, start_from=start_from)
                 dt_handler.prepare_data()
                 dt_handler.slip_variables_calculation()
                 dt_handler.wheel_forces_calculation()
-                
+
                 dt_log_data = {
                     'cmd_angle': target_steer_deg,
                     **params,
@@ -312,7 +334,7 @@ class IdentificationOrchestrator:
                     'Fx_rr_koeff': dt_handler.Fx_rr_koeff,
                 }
                 self.all_dt_data.append(dt_log_data)
-                
+
             except Exception as e:
                 print(f"Chyba při zpracování {file}: {e}")
 
@@ -597,25 +619,57 @@ class IdentificationOrchestrator:
 
         fig.subplots_adjust(wspace=0.2, hspace=0.2)
 
-def main(target: Path = ""):
-    if target == "":
-        parser = argparse.ArgumentParser(description="Load and aggregate multiple vehicle test logs.")
-        parser.add_argument("target_dir", type=Path, help="Path to the directory containing calibrated CSV logs")
-        args = parser.parse_args()
-        target_dir = args.target_dir
-    else:
-        target_dir = target
-    
-    orchestrator = IdentificationOrchestrator(target_dir)
-    orchestrator.load_and_process_logs()
-    
-    orchestrator.plot_aggregated_raw_data(use_abs=True)
-    orchestrator.plot_aggregated_st_models(use_abs=True)
-    # orchestrator.plot_aggregated_dt_models()
-    # orchestrator.plot_aggregated_combined_slip()
-    
-    plt.show()
+def main(sub_dir: str = "", start_from: float = 1.5, use_abs: bool = False, show_combined: bool = False):
+    orchestrator = IdentificationOrchestrator(sub_dir)
+    orchestrator.load_and_process_logs(start_from=start_from)
 
+    orchestrator.plot_aggregated_raw_data(use_abs=use_abs)
+    orchestrator.plot_aggregated_st_models(use_abs=use_abs)
+    orchestrator.plot_aggregated_dt_models(use_abs=use_abs)
+    if show_combined:
+        orchestrator.plot_aggregated_combined_slip()
+
+    plt.show()
+    
 if __name__ == '__main__':
-    target = Path("Calibrated")
-    main(target)
+    parser = argparse.ArgumentParser(
+        description="Načte a agreguje logy jízdních testů pro identifikaci Single-Track a Dual-Track modelů."
+    )
+    parser.add_argument(
+        "pos_subdir",
+        nargs="?",
+        type=str,
+        default=None,
+        help="Volitelný poziční název podsložky v log_files.",
+    )
+    parser.add_argument(
+        "--subdir",
+        type=str,
+        default="",
+        help="Podsložka v log_files (např. '23.11.2026').",
+    )
+    parser.add_argument(
+        "--start-from",
+        type=float,
+        default=1.5,
+        help="Oříznutí začátku každého logu v sekundách (výchozí: 1.5 s).",
+    )
+    parser.add_argument(
+        "--abs",
+        action="store_true",
+        help="Vykreslí barevnou škálu podle absolutní hodnoty úhlu řízení.",
+    )
+    parser.add_argument(
+        "--combined",
+        action="store_true",
+        help="Zobrazí i 3D grafy kombinovaného skluzu.",
+    )
+    args = parser.parse_args()
+
+    selected_subdir = args.subdir if args.subdir else (args.pos_subdir or "")
+    main(
+        sub_dir=selected_subdir,
+        start_from=args.start_from,
+        use_abs=args.abs,
+        show_combined=args.combined,
+    )

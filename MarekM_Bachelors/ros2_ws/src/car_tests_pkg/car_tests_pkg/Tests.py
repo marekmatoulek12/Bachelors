@@ -274,7 +274,6 @@ class RampSpeedTest(LoggingConnectionBP):
 
         return True
 
-
 class CombinedSteerSpeedTest(LoggingConnectionBP):
     """Kombinovaný test (RampSteer + RampSpeed):
     1. Dosáhne počáteční rychlosti (starting_velocity)
@@ -397,6 +396,113 @@ class CombinedSteerSpeedTest(LoggingConnectionBP):
 
         return True
 
+class FishHookTest(LoggingConnectionBP):
+    def __init__(
+        self,
+        node_name: str = "fish_hook_test",
+        target_velocity: float = 1.0,
+        acceleration_m_ss: float = 1.0,
+        turn_1_deg: float = 5.0,
+        turn_1_rate_deg_s: float = 5.0,
+        turn_2_deg: float = -20.0,
+        turn_2_rate_deg_s: float = -10.0,
+        test_length: float = 20.0,
+        timer_period: float = 0.01,
+    ):
+        super().__init__(
+            node_name=node_name,
+            control_loop=self.control_loop,
+            timer_period=timer_period,
+        )
+    
+        self.target_velocity = target_velocity  
+        self.acceleration = acceleration_m_ss       
+        self.turn_1_deg = turn_1_deg    
+        self.turn_1_rate_deg_s = turn_1_rate_deg_s        
+        self.turn_2_deg = turn_2_deg    
+        self.turn_2_rate_deg_s = turn_2_rate_deg_s   
+        self.timer_period = timer_period            
+        self.test_length = test_length              
+    
+        self.speed2rpm_controller = PIDController(
+            gains=PIDGains(kp=70, ki=150, kd=0),
+            output_limit=(-200, 200),
+            integrator_limit=(-200, 200),
+        )
+    
+        self.start_time = self.get_clock().now().nanoseconds / 1e9
+        self.test_phase = 1
+        self.ph_1_start_time = 0.0
+        self.ph_2_start_time = 0.0
+        self.ph_3_start_time = 0.0
+
+        self.ph_1_end_time = 0.0
+        self.ph_2_end_time = 0.0
+        self.ph_3_end_time = 0.0
+
+
+    def control_loop(self):
+        current_time = self.get_clock().now().nanoseconds / 1e9
+        test_elapsed_time = current_time - self.start_time
+        rpm_req = 0.0
+        steering_angle_req_deg = 0.0
+        
+        if test_elapsed_time >= self.test_length:
+            self.get_logger().info("Test length exceeded. Stopping test.")
+            return False
+        
+        if self.all_data_available():
+            match self.test_phase:
+                case 1: # cekat, az se auto rozebehne
+
+                    if self.ph_1_start_time == 0.0:
+                        self.ph_1_start_time = current_time
+
+                    ph_1_elapsed_time =  current_time - self.ph_1_start_time
+                    tar_sp = self.acceleration * ph_1_elapsed_time
+                    rpm_ff = self.vx2rpm(tar_sp)
+                    rpm_fb = self.speed2rpm_controller.step(tar_sp - self.vx, self.timer_period)  # type: ignore
+                    rpm_req = rpm_ff + rpm_fb
+                    steering_angle_req_deg = 0.0
+                    
+                    self.get_logger().info(
+                        f"Faze 1 | v: {self.vx:.2f}/{tar_sp:.2f} m/s | steer: {steering_angle_req_deg:.2f} deg | rpm_req: {rpm_req:.2f}"
+                    )
+                    
+                    if (self.target_velocity <= 0.0 or self.vx >= self.target_velocity * 0.95):
+                        self.test_phase = 2
+                        self.ph_1_end_time = current_time
+
+                case 2: # zadni kola "volnobeh" + prvni cast fish hooku
+                    if self.ph_2_start_time == 0.0:
+                        self.ph_2_start_time = current_time
+                    ph_2_elapsed_time = current_time - self.ph_2_start_time
+                    rpm_req = self.vx2rpm(self.vx) # snaha drzet zadni kola ve volnobehu pro nulovy longitudal slip
+
+                    steering_angle_req_deg = self.turn_1_rate_deg_s * ph_2_elapsed_time
+
+                    self.get_logger().info(
+                        f"Faze 2 | v: {self.vx:.2f}/{tar_sp:.2f} m/s | steer: {steering_angle_req_deg:.2f} deg | rpm_req: {rpm_req:.2f}"
+                    )
+                    
+                    if (steering_angle_req_deg >= self.turn_1_deg * 0.95):
+                        self.test_phase = 3
+                        self.ph_2_end_time = current_time
+                
+                case 3: # zadni kola "volnobeh" + druha cast fish hooku
+                    if self.ph_3_start_time == 0.0:
+                        self.ph_3_start_time = current_time
+                    ph_3_elapsed_time = current_time - self.ph_3_start_time
+                    rpm_req = self.vx2rpm(self.vx) # snaha drzet zadni kola ve volnobehu pro nulovy longitudal slip
+        
+                    steering_angle_req_deg = self.turn_2_rate_deg_s * ph_3_elapsed_time
+        
+                    self.get_logger().info(
+                        f"Faze 3 | v: {self.vx:.2f}/{tar_sp:.2f} m/s | steer: {steering_angle_req_deg:.2f} deg | rpm_req: {rpm_req:.2f}"
+                    )
+        
+                    
+
 def main(args=None):
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
 
@@ -453,22 +559,42 @@ def main(args=None):
     #     timer_period=timer_period,
     # )
 
-    # """ COMBINED STEER & SPEED TEST SETUP """
-    starting_velocity = 1.0    # m/s
-    target_steer_deg = 10.0     # deg
-    steering_rate = 4.0        # deg/s
-    acceleration_m_ss = 0.3    # m/s^2
-    test_length = 20.0         # seconds
-    timer_period = 0.01        # 100 Hz
+    # # """ COMBINED STEER & SPEED TEST SETUP """
+    # starting_velocity = 1.0    # m/s
+    # target_steer_deg = 10.0     # deg
+    # steering_rate = 4.0        # deg/s
+    # acceleration_m_ss = 0.3    # m/s^2
+    # test_length = 20.0         # seconds
+    # timer_period = 0.01        # 100 Hz
 
-    node = CombinedSteerSpeedTest(
-        node_name=f"""csst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{sgn_str(steering_rate)}{int(abs(steering_rate))}_{int(starting_velocity)}_{sgn_str(acceleration_m_ss)}{int(acceleration_m_ss)}""",
-        starting_velocity=starting_velocity,
-        target_steer_deg=target_steer_deg,
-        steering_rate=steering_rate,
+    # node = CombinedSteerSpeedTest(
+    #     node_name=f"csst_{sgn_str(target_steer_deg)}{int(abs(target_steer_deg))}_{sgn_str(steering_rate)}{int(abs(steering_rate))}_{int(starting_velocity)}_{sgn_str(acceleration_m_ss)}{int(acceleration_m_ss)}",
+    #     starting_velocity=starting_velocity,
+    #     target_steer_deg=target_steer_deg,
+    #     steering_rate=steering_rate,
+    #     acceleration_m_ss=acceleration_m_ss,
+    #     test_length=test_length,
+    #     timer_period=timer_period,
+    # )
+
+    # """ FISH HOOK TEST SETUP """
+    target_velocity: float = 1.0,       # m/s     
+    acceleration_m_ss: float = 1.0,     # m/s**2
+    turn_1_deg: float = 5.0,            # deg
+    turn_1_rate_deg_s: float = 5.0,     # deg/s
+    turn_2_deg: float = -20.0,          # deg
+    turn_2_rate_deg_s: float = -10.0,   # deg/s
+    test_length = 20.0                  # seconds
+    timer_period = 0.01                 # 100 Hz
+    
+    node = FishHookTest(
+        node_name=f"fht_{sgn_str(turn_2_deg)}{int(abs(turn_2_deg))}_{sgn_str(turn_2_rate_deg_s)}{int(abs(turn_2_rate_deg_s))}_{int(target_velocity)}_{sgn_str(acceleration_m_ss)}{int(acceleration_m_ss)}",
+        target_velocity=target_velocity,
         acceleration_m_ss=acceleration_m_ss,
-        test_length=test_length,
-        timer_period=timer_period,
+        turn_1_deg=turn_1_deg,
+        turn_1_rate_deg_s=turn_1_rate_deg_s,
+        turn_2_deg=turn_2_deg,
+        turn_2_rate_deg_s=turn_2_rate_deg_s,
     )
 
     """ SPUSTENI TESTU """

@@ -126,8 +126,6 @@ class LoggingConnectionBP(Node):
             self.fr_callback,
             10
         )
-
-
         self.sub_rl_curr_req = self.create_subscription(
             Float64,
             '/powertrain/rl/current_req', ## idk jestli topic dobre
@@ -152,7 +150,6 @@ class LoggingConnectionBP(Node):
             self.rr_current_fb_callback,
             10
         )
-
 
 
         # Nastaveni logovani do CSV
@@ -402,17 +399,23 @@ class LoggingConnectionBP(Node):
         # Pri Ctrl+C muze byt ROS kontext uz neplatny, proto nepublikujeme, pokud nefunguje.
         try:
             if rclpy.ok():
-                # snaha zastavit auto
-                self.log_commands(0.0, 0.0)
-                self.publish_data()
-                self.get_logger().info("Resetovaci zprava odeslana")
-
-                timeout = Duration(seconds=1.0)
-                for publisher in (self.pub_steer, self.pub_rpm_rl, self.pub_rpm_rr):
-                    if not publisher.wait_for_all_acked(timeout):
-                        self.get_logger().warning(
-                            f"Nepřišlo potvrzení doručení z topicu {publisher.topic_name}."
-                        )
+                # vetsinou probehne dobre, ale auto ma setrvacnost -> musime poslat vicekrat
+                # kdyz se posle jednou, auto go brm do zdi - dont ask how i know
+                self.get_logger().info("Posilam reset po dobu 2 s")
+                start_time = time.time()
+                elapsed_time = 0.0
+                while elapsed_time < 2.0:
+                    self.log_commands(0.0, 0.0)
+                    self.publish_data()
+                    timeout = Duration(seconds=1.0)
+                    for publisher in (self.pub_steer, self.pub_rpm_rl, self.pub_rpm_rr):
+                        if not publisher.wait_for_all_acked(timeout):
+                            self.get_logger().warning(
+                                f"Nepřišlo potvrzení doručení z topicu {publisher.topic_name}."
+                            )
+                            break
+                    elapsed_time = time.time() - start_time
+                self.get_logger().info("Resetovaci sekvence odeslana")
                         
         except Exception:
             self.get_logger().warning("Shutdown publish selhal, pokracuji v ukonceni node.")
